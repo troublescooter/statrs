@@ -28,6 +28,7 @@
 #![crate_name = "statrs"]
 
 extern crate rand;
+extern crate num;
 
 #[macro_export]
 macro_rules! assert_almost_eq {
