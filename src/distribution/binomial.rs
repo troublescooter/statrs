@@ -1,11 +1,13 @@
 use std::f64;
-use rand::Rng;
+use num;
+use rand::{Rng, Rand};
 use rand::distributions::{Sample, IndependentSample};
 use function::{beta, factorial};
 use statistics::*;
 use distribution::{Univariate, Discrete, Distribution};
 use result::Result;
 use error::StatsError;
+use {Float, Integer};
 
 /// Implements the [Binomial](https://en.wikipedia.org/wiki/Binomial_distribution)
 /// distribution
@@ -23,12 +25,18 @@ use error::StatsError;
 /// assert_eq!(n.pmf(6), 0.0);
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Binomial {
-    p: f64,
-    n: i64,
+pub struct Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
+    p: P,
+    n: N,
 }
 
-impl Binomial {
+impl<P, N> Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Constructs a new binomial distribution
     /// with a given `p` probability of success of `n`
     /// trials.
@@ -49,8 +57,8 @@ impl Binomial {
     /// result = Binomial::new(-0.5, -5);
     /// assert!(result.is_err());
     /// ```
-    pub fn new(p: f64, n: i64) -> Result<Binomial> {
-        if p.is_nan() || p < 0.0 || p > 1.0 || n < 0 {
+    pub fn new(p: P, n: N) -> Result<Binomial<P, N>> {
+        if p.is_nan() || p < num::zero::<P>() || p > num::one::<P>() || n < num::zero::<N>() {
             Err(StatsError::BadParams)
         } else {
             Ok(Binomial { p: p, n: n })
@@ -68,7 +76,7 @@ impl Binomial {
     /// let n = Binomial::new(0.5, 5).unwrap();
     /// assert_eq!(n.p(), 0.5);
     /// ```
-    pub fn p(&self) -> f64 {
+    pub fn p(&self) -> P {
         self.p
     }
 
@@ -83,16 +91,19 @@ impl Binomial {
     /// let n = Binomial::new(0.5, 5).unwrap();
     /// assert_eq!(n.n(), 5);
     /// ```
-    pub fn n(&self) -> i64 {
+    pub fn n(&self) -> N {
         self.n
     }
 }
 
-impl Sample<f64> for Binomial {
+impl<P, N> Sample<P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Generate a random sample from a binomial
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn sample<R: Rng>(&mut self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&mut self, r: &mut R) -> P {
         super::Distribution::sample(self, r)
     }
 }
@@ -100,13 +111,19 @@ impl Sample<f64> for Binomial {
 /// Generate a random independent sample from a binomial
 /// distribution using `r` as the source of randomness.
 /// Refer [here](#method.sample-1) for implementation details
-impl IndependentSample<f64> for Binomial {
-    fn ind_sample<R: Rng>(&self, r: &mut R) -> f64 {
+impl<P, N> IndependentSample<P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
+    fn ind_sample<R: Rng>(&self, r: &mut R) -> P {
         super::Distribution::sample(self, r)
     }
 }
 
-impl Distribution<f64> for Binomial {
+impl<P, N> Distribution<P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Generate a random sample from the binomial distribution
     /// using `r` as the source of randomness  where the range of
     /// values is `[0.0, n]`.
@@ -125,15 +142,22 @@ impl Distribution<f64> for Binomial {
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
-    fn sample<R: Rng>(&self, r: &mut R) -> f64 {
-        (0..self.n).fold(0.0, |acc, _| {
-            let n = r.next_f64();
-            if n < self.p { acc + 1.0 } else { acc }
+    fn sample<R: Rng>(&self, r: &mut R) -> P {
+        num::range(num::zero::<N>(), self.n).fold(num::zero::<P>(), |acc, _| {
+            let n = r.gen::<P>();
+            if n < self.p {
+                acc + num::one::<P>()
+            } else {
+                acc
+            }
         })
     }
 }
 
-impl Univariate<i64, f64> for Binomial {
+impl<P, N> Univariate<N, P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Calulcates the cumulative distribution function for the
     /// binomial distribution at `x`
     ///
@@ -148,19 +172,24 @@ impl Univariate<i64, f64> for Binomial {
     /// ```
     ///
     /// where `I_(x)(a, b)` is the regularized incomplete beta function
-    fn cdf(&self, x: f64) -> f64 {
-        if x < 0.0 {
-            0.0
-        } else if x >= self.n as f64 {
-            1.0
+    fn cdf(&self, x: P) -> P {
+        if x < num::zero::<P>() {
+            num::zero::<P>()
+        } else if x >= P::from(self.n).unwrap() {
+            num::one::<P>()
         } else {
             let k = x.floor();
-            beta::beta_reg(self.n as f64 - k, k + 1.0, 1.0 - self.p)
+            beta::beta_reg(P::from(self.n).unwrap() - k,
+                           k + num::one::<P>(),
+                           num::one::<P>() - self.p)
         }
     }
 }
 
-impl Min<i64> for Binomial {
+impl<P, N> Min<N> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Returns the minimum value in the domain of the
     /// binomial distribution representable by a 64-bit
     /// integer
@@ -170,12 +199,15 @@ impl Min<i64> for Binomial {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> i64 {
-        0
+    fn min(&self) -> N {
+        num::zero::<N>()
     }
 }
 
-impl Max<i64> for Binomial {
+impl<P, N> Max<N> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Returns the maximum value in the domain of the
     /// binomial distribution representable by a 64-bit
     /// integer
@@ -185,12 +217,15 @@ impl Max<i64> for Binomial {
     /// ```ignore
     /// n
     /// ```
-    fn max(&self) -> i64 {
+    fn max(&self) -> N {
         self.n
     }
 }
 
-impl Mean<f64> for Binomial {
+impl<P, N> Mean<P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Returns the mean of the binomial distribution
     ///
     /// # Formula
@@ -198,12 +233,15 @@ impl Mean<f64> for Binomial {
     /// ```ignore
     /// p * n
     /// ```
-    fn mean(&self) -> f64 {
-        self.p * self.n as f64
+    fn mean(&self) -> P {
+        self.p * P::from(self.n).unwrap()
     }
 }
 
-impl Variance<f64> for Binomial {
+impl<P, N> Variance<P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Returns the variance of the binomial distribution
     ///
     /// # Formula
@@ -211,8 +249,8 @@ impl Variance<f64> for Binomial {
     /// ```ignore
     /// n * p * (1 - p)
     /// ```
-    fn variance(&self) -> f64 {
-        self.p * (1.0 - self.p) * self.n as f64
+    fn variance(&self) -> P {
+        self.p * (num::one::<P>() - self.p) * P::from(self.n).unwrap()
     }
 
     /// Returns the standard deviation of the binomial distribution
@@ -222,12 +260,15 @@ impl Variance<f64> for Binomial {
     /// ```ignore
     /// sqrt(n * p * (1 - p))
     /// ```
-    fn std_dev(&self) -> f64 {
+    fn std_dev(&self) -> P {
         self.variance().sqrt()
     }
 }
 
-impl Entropy<f64> for Binomial {
+impl<P, N> Entropy<P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Returns the entropy of the binomial distribution
     ///
     /// # Formula
@@ -235,20 +276,22 @@ impl Entropy<f64> for Binomial {
     /// ```ignore
     /// (1 / 2) * ln (2 * π * e * n * p * (1 - p))
     /// ```
-    fn entropy(&self) -> f64 {
-        match self.p {
-            0.0 | 1.0 => 0.0,
-            _ => {
-                (0..self.n + 1).fold(0.0, |acc, x| {
-                    let p = self.pmf(x);
-                    acc - p * p.ln()
-                })
-            }
+    fn entropy(&self) -> P {
+        if self.p.is_zero() || self.p == num::one::<P>() {
+            num::zero::<P>()
+        } else {
+            num::range_inclusive(num::zero::<N>(), self.n).fold(num::zero::<P>(), |acc, x| {
+                let p = self.pmf(x);
+                acc - p * p.ln()
+            })
         }
     }
 }
 
-impl Skewness<f64> for Binomial {
+impl<P, N> Skewness<P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Returns the skewness of the binomial distribution
     ///
     /// # Formula
@@ -256,12 +299,16 @@ impl Skewness<f64> for Binomial {
     /// ```ignore
     /// (1 - 2p) / sqrt(n * p * (1 - p)))
     /// ```
-    fn skewness(&self) -> f64 {
-        (1.0 - 2.0 * self.p) / (self.n as f64 * self.p * (1.0 - self.p)).sqrt()
+    fn skewness(&self) -> P {
+        (num::one::<P>() - P::from(2.0).unwrap() * self.p) /
+        (P::from(self.n).unwrap() * self.p * (num::one::<P>() - self.p)).sqrt()
     }
 }
 
-impl Median<f64> for Binomial {
+impl<P, N> Median<P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Returns the median of the binomial distribution
     ///
     /// # Formula
@@ -269,12 +316,15 @@ impl Median<f64> for Binomial {
     /// ```ignore
     /// floor(n * p)
     /// ```
-    fn median(&self) -> f64 {
-        (self.p * self.n as f64).floor()
+    fn median(&self) -> P {
+        (self.p * P::from(self.n).unwrap()).floor()
     }
 }
 
-impl Mode<i64> for Binomial {
+impl<P, N> Mode<N> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Returns the mode for the binomial distribution
     ///
     /// # Formula
@@ -282,16 +332,21 @@ impl Mode<i64> for Binomial {
     /// ```ignore
     /// floor((n + 1) * p)
     /// ```
-    fn mode(&self) -> i64 {
-        match self.p {
-            0.0 => 0,
-            1.0 => self.n,
-            _ => ((self.n as f64 + 1.0) * self.p).floor() as i64,
+    fn mode(&self) -> N {
+        if self.p.is_zero() {
+            num::zero::<N>()
+        } else if self.p == num::one::<P>() {
+            self.n
+        } else {
+            N::from((P::from(self.n).unwrap() + num::one::<P>()).floor()).unwrap()
         }
     }
 }
 
-impl Discrete<i64, f64> for Binomial {
+impl<P, N> Discrete<N, P> for Binomial<P, N>
+    where P: Float,
+          N: Integer
+{
     /// Calculates the probability mass function for the binomial
     /// distribution at `x`
     ///
@@ -304,20 +359,23 @@ impl Discrete<i64, f64> for Binomial {
     /// ```ignore
     /// (n choose k) * p^k * (1 - p)^(n - k)
     /// ```
-    fn pmf(&self, x: i64) -> f64 {
-        if x > self.n || x < 0 {
-            0.0
+    fn pmf(&self, x: N) -> P {
+        if x > self.n || x < num::zero::<N>() {
+            num::zero::<P>()
         } else {
-            match self.p {
-                0.0 if x == 0 => 1.0,
-                0.0 => 0.0,
-                1.0 if x == self.n => 1.0,
-                1.0 => 0.0,
-                _ => {
-                    (factorial::ln_binomial(self.n as u64, x as u64) + x as f64 * self.p.ln() +
-                     (self.n - x) as f64 * (1.0 - self.p).ln())
-                        .exp()
-                }
+            if self.p.is_zero() && x.is_zero() {
+                num::one::<P>()
+            } else if self.p.is_zero() {
+                num::zero::<P>()
+            } else if self.p == num::one::<P>() && x == self.n {
+                num::one::<P>()
+            } else if self.p == num::one::<P>() {
+                num::zero::<P>()
+            } else {
+                (factorial::ln_binomial(self.n.to_u64().unwrap(), x.to_u64().unwrap()) +
+                 P::from(x).unwrap() * self.p.ln() +
+                 P::from(self.n - x).unwrap() * (num::one::<P>() - self.p).ln())
+                    .exp()
             }
         }
     }
@@ -334,19 +392,22 @@ impl Discrete<i64, f64> for Binomial {
     /// ```ignore
     /// ln((n choose k) * p^k * (1 - p)^(n - k))
     /// ```
-    fn ln_pmf(&self, x: i64) -> f64 {
-        if x > self.n || x < 0 {
-            f64::NEG_INFINITY
+    fn ln_pmf(&self, x: N) -> P {
+        if x > self.n || x < num::zero::<N>() {
+            P::neg_infinity()
         } else {
-            match self.p {
-                0.0 if x == 0 => 0.0,
-                0.0 => f64::NEG_INFINITY,
-                1.0 if x == self.n => 0.0,
-                1.0 => f64::NEG_INFINITY,
-                _ => {
-                    factorial::ln_binomial(self.n as u64, x as u64) + x as f64 * self.p.ln() +
-                    (self.n - x) as f64 * (1.0 - self.p).ln()
-                }
+            if self.p.is_zero() && x.is_zero() {
+                num::zero::<P>()
+            } else if self.p.is_zero() {
+                P::neg_infinity()
+            } else if self.p == num::one::<P>() && x == self.n {
+                num::zero::<P>()
+            } else if self.p == num::one::<P>() {
+                P::neg_infinity()
+            } else {
+                factorial::ln_binomial(self.n.to_u64().unwrap(), x.to_u64().unwrap()) +
+                P::from(x).unwrap() * self.p.ln() +
+                P::from(self.n - x).unwrap() * (num::one::<P>() - self.p).ln()
             }
         }
     }
@@ -361,7 +422,7 @@ mod test {
     use statistics::*;
     use distribution::{Univariate, Discrete, Binomial};
 
-    fn try_create(p: f64, n: i64) -> Binomial {
+    fn try_create(p: f64, n: i64) -> Binomial<f64, i64> {
         let n = Binomial::new(p, n);
         assert!(n.is_ok());
         n.unwrap()
@@ -379,7 +440,7 @@ mod test {
 
     fn get_value<T, F>(p: f64, n: i64, eval: F) -> T
         where T: PartialEq + Debug,
-              F: Fn(Binomial) -> T
+              F: Fn(Binomial<f64, i64>) -> T
     {
         let n = try_create(p, n);
         eval(n)
@@ -387,14 +448,14 @@ mod test {
 
     fn test_case<T, F>(p: f64, n: i64, expected: T, eval: F)
         where T: PartialEq + Debug,
-              F: Fn(Binomial) -> T
+              F: Fn(Binomial<f64, i64>) -> T
     {
         let x = get_value(p, n, eval);
         assert_eq!(expected, x);
     }
 
     fn test_almost<F>(p: f64, n: i64, expected: f64, acc: f64, eval: F)
-        where F: Fn(Binomial) -> f64
+        where F: Fn(Binomial<f64, i64>) -> f64
     {
         let x = get_value(p, n, eval);
         assert_almost_eq!(expected, x, acc);

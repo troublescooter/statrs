@@ -39,6 +39,18 @@ macro_rules! assert_almost_eq {
     );
 }
 
+/// Float is a wrapper trait for generic floating point types used
+/// by statrs.
+pub trait Float: num::Float + NumBase {}
+
+/// Integer is a wrapper trait for generic integer types used
+/// by statrs
+pub trait Integer: num::Integer + NumBase {}
+
+/// Base trait for numeric types
+trait NumBase: num::NumCast + num::ToPrimitive + rand::Rand + Clone {}
+
+
 pub mod distribution;
 pub mod euclid;
 pub mod function;
