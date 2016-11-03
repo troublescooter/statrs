@@ -106,7 +106,7 @@ pub fn gamma_ui<T>(a: T, x: T) -> T
 ///
 /// if `a` or `x` are less than `0.0`
 pub fn gamma_li<T>(a: T, x: T) -> T
-    where T: float
+    where T: Float
 {
     gamma_lr(a, x) * gamma(a)
 }
@@ -123,37 +123,39 @@ pub fn gamma_li<T>(a: T, x: T) -> T
 /// # Panics
 ///
 /// if `a` or `x` are less than `0.0`
-pub fn gamma_ur(a: f64, x: f64) -> f64 {
+pub fn gamma_ur<T>(a: T, x: T) -> T
+    where T: Float
+{
     if a.is_nan() || x.is_nan() {
-        return f64::NAN;
+        return T::nan();
     }
 
-    let eps = 0.000000000000001;
-    let big = 4503599627370496.0;
-    let big_inv = 2.22044604925031308085e-16;
+    let eps = T::from(0.000000000000001).unwrap();
+    let big = T::from(4503599627370496.0).unwrap();
+    let big_inv = T::from(2.22044604925031308085e-16).unwrap();
 
-    if x < 1.0 || x <= a {
-        return 1.0 - gamma_lr(a, x);
+    if x < T::one() || x <= a {
+        return T::one() - gamma_lr(a, x);
     }
 
     let mut ax = a * x.ln() - x - ln_gamma(a);
-    if ax < -709.78271289338399 {
-        return if a < x { 0.0 } else { 1.0 };
+    if ax < T::from(-709.78271289338399).unwrap() {
+        return if a < x { T::zero() } else { T::one() };
     }
 
     ax = ax.exp();
-    let mut y = 1.0 - a;
-    let mut z = x + y + 1.0;
-    let mut c = 0.0;
-    let mut pkm2 = 1.0;
+    let mut y = T::one() - a;
+    let mut z = x + y + T::one();
+    let mut c = T::zero();
+    let mut pkm2 = T::one();
     let mut qkm2 = x;
-    let mut pkm1 = x + 1.0;
+    let mut pkm1 = x + T::one();
     let mut qkm1 = z * x;
     let mut ans = pkm1 / qkm1;
     loop {
-        y += 1.0;
-        z += 2.0;
-        c += 1.0;
+        y = y + T::one();
+        z = z + T::from(2.0).unwrap();
+        c = c + T::one();
         let yc = y * c;
         let pk = pkm1 * z - pkm2 * yc;
         let qk = qkm1 * z - qkm2 * yc;
@@ -164,13 +166,13 @@ pub fn gamma_ur(a: f64, x: f64) -> f64 {
         qkm1 = qk;
 
         if pk.abs() > big {
-            pkm2 *= big_inv;
-            pkm1 *= big_inv;
-            qkm2 *= big_inv;
-            qkm1 *= big_inv;
+            pkm2 = pkm2 * big_inv;
+            pkm1 = pkm1 * big_inv;
+            qkm2 = qkm2 * big_inv;
+            qkm1 = qkm1 * big_inv;
         }
 
-        if qk != 0.0 {
+        if qk != T::zero() {
             let r = pk / qk;
             let t = ((ans - r) / r).abs();
             ans = r;
@@ -194,38 +196,42 @@ pub fn gamma_ur(a: f64, x: f64) -> f64 {
 /// # Panics
 ///
 /// if `a` or `x` are less than 0.0
-pub fn gamma_lr(a: f64, x: f64) -> f64 {
+pub fn gamma_lr<T>(a: T, x: T) -> T
+    where T: Float
+{
     if a.is_nan() || x.is_nan() {
-        return f64::NAN;
+        return T::nan();
     }
 
-    assert!(a >= 0.0, format!("{}", StatsError::ArgNotNegative("a")));
-    assert!(x >= 0.0, format!("{}", StatsError::ArgNotNegative("x")));
+    assert!(a >= T::zero(),
+            format!("{}", StatsError::ArgNotNegative("a")));
+    assert!(x >= T::zero(),
+            format!("{}", StatsError::ArgNotNegative("x")));
 
-    let eps = 0.000000000000001;
-    let big = 4503599627370496.0;
-    let big_inv = 2.22044604925031308085e-16;
+    let eps = T::from(0.000000000000001).unwrap();
+    let big = T::from(4503599627370496.0).unwrap();
+    let big_inv = T::from(2.22044604925031308085e-16).unwrap();
 
-    if prec::almost_eq(a, 0.0, prec::DEFAULT_F64_ACC) {
-        return 1.0;
+    if prec::almost_eq(a, 0.0, T::accuracy()) {
+        return T::one();
     }
-    if prec::almost_eq(x, 0.0, prec::DEFAULT_F64_ACC) {
-        return 0.0;
+    if prec::almost_eq(x, 0.0, T::accuracy()) {
+        return T::one();
     }
 
     let ax = a * x.ln() - x - ln_gamma(a);
-    if ax < -709.78271289338399 {
+    if ax < T::from(-709.78271289338399).unwrap() {
         if a < x {
-            return 1.0;
+            return T::one();
         }
-        return 0.0;
+        return T::zero();
     }
-    if x <= 1.0 || x <= a {
+    if x <= T::one() || x <= a {
         let mut r2 = a;
-        let mut c2 = 1.0;
-        let mut ans2 = 1.0;
+        let mut c2 = T::one();
+        let mut ans2 = T::one();
         loop {
-            r2 += 1.0;
+            r2 += T::one();
             c2 *= x / r2;
             ans2 += c2;
 
@@ -236,21 +242,21 @@ pub fn gamma_lr(a: f64, x: f64) -> f64 {
         return ax.exp() * ans2 / a;
     }
 
-    let mut y = 1.0 - a;
-    let mut z = x + y + 1.0;
+    let mut y = T::one() - a;
+    let mut z = x + y + T::one();
     let mut c = 0;
 
-    let mut p3 = 1.0;
+    let mut p3 = T::one();
     let mut q3 = x;
-    let mut p2 = x + 1.0;
+    let mut p2 = x + T::one();
     let mut q2 = z * x;
     let mut ans = p2 / q2;
 
     loop {
-        y += 1.0;
-        z += 2.0;
+        y = y + T::one();
+        z = z + T::from(2.0).unwrap();
         c += 1;
-        let yc = y * c as f64;
+        let yc = y * T::from(c).unwrap();
 
         let p = p2 * z - p3 * yc;
         let q = q2 * z - q3 * yc;
@@ -267,7 +273,7 @@ pub fn gamma_lr(a: f64, x: f64) -> f64 {
             q2 *= big_inv;
         }
 
-        if q != 0.0 {
+        if q != T::zero() {
             let nextans = p / q;
             let error = ((ans - nextans) / nextans).abs();
             ans = nextans;
@@ -277,7 +283,7 @@ pub fn gamma_lr(a: f64, x: f64) -> f64 {
             }
         }
     }
-    1.0 - ax.exp() * ans
+    T::one() - ax.exp() * ans
 }
 
 /// Computes the Digamma function which is defined as the derivative of

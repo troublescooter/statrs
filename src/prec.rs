@@ -31,7 +31,9 @@ impl Precision for f32 {
 /// If `a` or `b` are infinite, returns `true` only if both are
 /// infinite and similarly signed. Always returns `false` if
 /// either number is a `NAN`.
-pub fn almost_eq(a: f64, b: f64, acc: f64) -> bool {
+pub fn almost_eq<T>(a: T, b: T, acc: T) -> bool
+    where T: Float
+{
     // only true if a and b are infinite with same
     // sign
     if a.is_infinite() || b.is_infinite() {
