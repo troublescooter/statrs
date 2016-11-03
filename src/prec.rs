@@ -19,7 +19,7 @@ impl Precision for f64 {
 
 impl Precision for f32 {
     fn precision() -> Self {
-        232.powi(-24)
+        2f32.powi(-24)
     }
 
     fn accuracy() -> Self {

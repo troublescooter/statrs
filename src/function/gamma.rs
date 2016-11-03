@@ -35,7 +35,7 @@ pub fn ln_gamma<T>(x: T) -> T
             .skip(1)
             .fold(T::from(GAMMA_DK[0]).unwrap(), |s, t| s + t.1 / (t.0 - x));
 
-        consts::LN_PI - (T::PI() * x).sin().ln() - s.ln() - consts::LN_2_SQRT_E_OVER_PI -
+        T::LN_PI() - (T::PI() * x).sin().ln() - s.ln() - T::LN_2_SQRT_E_OVER_PI() -
         (T::from(0.5).unwrap() - x) *
         ((T::from(0.5).unwrap() - x + T::from(GAMMA_R).unwrap()) / T::E()).ln()
     } else {
@@ -46,7 +46,7 @@ pub fn ln_gamma<T>(x: T) -> T
             .fold(T::from(GAMMA_DK[0]).unwrap(),
                   |s, t| s + t.1 / (x + t.0 - T::one()));
 
-        s.ln() + consts::LN_2_SQRT_E_OVER_PI +
+        s.ln() + T::LN_2_SQRT_E_OVER_PI() +
         (x - T::from(0.5).unwrap()) *
         ((x - T::from(0.5).unwrap() + T::from(GAMMA_R).unwrap()) / T::E()).ln()
     }
