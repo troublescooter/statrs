@@ -58,7 +58,7 @@ impl<P, N> Binomial<P, N>
     /// assert!(result.is_err());
     /// ```
     pub fn new(p: P, n: N) -> Result<Binomial<P, N>> {
-        if p.is_nan() || p < num::zero::<P>() || p > num::one::<P>() || n < num::zero::<N>() {
+        if p.is_nan() || p < P::zero() || p > P::one() || n < N::zero() {
             Err(StatsError::BadParams)
         } else {
             Ok(Binomial { p: p, n: n })
@@ -143,13 +143,9 @@ impl<P, N> Distribution<P> for Binomial<P, N>
     /// # }
     /// ```
     fn sample<R: Rng>(&self, r: &mut R) -> P {
-        num::range(num::zero::<N>(), self.n).fold(num::zero::<P>(), |acc, _| {
+        num::range(N::zero(), self.n).fold(P::zero(), |acc, _| {
             let n = r.gen::<P>();
-            if n < self.p {
-                acc + num::one::<P>()
-            } else {
-                acc
-            }
+            if n < self.p { acc + P::one() } else { acc }
         })
     }
 }
@@ -173,15 +169,15 @@ impl<P, N> Univariate<N, P> for Binomial<P, N>
     ///
     /// where `I_(x)(a, b)` is the regularized incomplete beta function
     fn cdf(&self, x: P) -> P {
-        if x < num::zero::<P>() {
-            num::zero::<P>()
+        if x < P::zero() {
+            P::zero()
         } else if x >= P::from(self.n).unwrap() {
-            num::one::<P>()
+            P::one()
         } else {
             let k = x.floor();
             beta::beta_reg(P::from(self.n).unwrap() - k,
-                           k + num::one::<P>(),
-                           num::one::<P>() - self.p)
+                           k + P::one(),
+                           P::one() - self.p)
         }
     }
 }
@@ -200,7 +196,7 @@ impl<P, N> Min<N> for Binomial<P, N>
     /// 0
     /// ```
     fn min(&self) -> N {
-        num::zero::<N>()
+        N::zero()
     }
 }
 
@@ -250,7 +246,7 @@ impl<P, N> Variance<P> for Binomial<P, N>
     /// n * p * (1 - p)
     /// ```
     fn variance(&self) -> P {
-        self.p * (num::one::<P>() - self.p) * P::from(self.n).unwrap()
+        self.p * (P::one() - self.p) * P::from(self.n).unwrap()
     }
 
     /// Returns the standard deviation of the binomial distribution
@@ -277,10 +273,10 @@ impl<P, N> Entropy<P> for Binomial<P, N>
     /// (1 / 2) * ln (2 * π * e * n * p * (1 - p))
     /// ```
     fn entropy(&self) -> P {
-        if self.p.is_zero() || self.p == num::one::<P>() {
-            num::zero::<P>()
+        if self.p.is_zero() || self.p == P::one() {
+            P::zero()
         } else {
-            num::range_inclusive(num::zero::<N>(), self.n).fold(num::zero::<P>(), |acc, x| {
+            num::range_inclusive(N::zero(), self.n).fold(P::zero(), |acc, x| {
                 let p = self.pmf(x);
                 acc - p * p.ln()
             })
@@ -300,8 +296,8 @@ impl<P, N> Skewness<P> for Binomial<P, N>
     /// (1 - 2p) / sqrt(n * p * (1 - p)))
     /// ```
     fn skewness(&self) -> P {
-        (num::one::<P>() - P::from(2.0).unwrap() * self.p) /
-        (P::from(self.n).unwrap() * self.p * (num::one::<P>() - self.p)).sqrt()
+        (P::one() - P::from(2.0).unwrap() * self.p) /
+        (P::from(self.n).unwrap() * self.p * (P::one() - self.p)).sqrt()
     }
 }
 
@@ -334,11 +330,11 @@ impl<P, N> Mode<N> for Binomial<P, N>
     /// ```
     fn mode(&self) -> N {
         if self.p.is_zero() {
-            num::zero::<N>()
-        } else if self.p == num::one::<P>() {
+            N::zero()
+        } else if self.p == P::one() {
             self.n
         } else {
-            N::from((P::from(self.n).unwrap() + num::one::<P>()).floor()).unwrap()
+            N::from((P::from(self.n).unwrap() + P::one()).floor()).unwrap()
         }
     }
 }
@@ -360,21 +356,21 @@ impl<P, N> Discrete<N, P> for Binomial<P, N>
     /// (n choose k) * p^k * (1 - p)^(n - k)
     /// ```
     fn pmf(&self, x: N) -> P {
-        if x > self.n || x < num::zero::<N>() {
-            num::zero::<P>()
+        if x > self.n || x < N::zero() {
+            P::zero()
         } else {
             if self.p.is_zero() && x.is_zero() {
-                num::one::<P>()
+                P::one()
             } else if self.p.is_zero() {
-                num::zero::<P>()
-            } else if self.p == num::one::<P>() && x == self.n {
-                num::one::<P>()
-            } else if self.p == num::one::<P>() {
-                num::zero::<P>()
+                P::zero()
+            } else if self.p == P::one() && x == self.n {
+                P::one()
+            } else if self.p == P::one() {
+                P::zero()
             } else {
                 (factorial::ln_binomial(self.n.to_u64().unwrap(), x.to_u64().unwrap()) +
                  P::from(x).unwrap() * self.p.ln() +
-                 P::from(self.n - x).unwrap() * (num::one::<P>() - self.p).ln())
+                 P::from(self.n - x).unwrap() * (P::one() - self.p).ln())
                     .exp()
             }
         }
@@ -393,21 +389,21 @@ impl<P, N> Discrete<N, P> for Binomial<P, N>
     /// ln((n choose k) * p^k * (1 - p)^(n - k))
     /// ```
     fn ln_pmf(&self, x: N) -> P {
-        if x > self.n || x < num::zero::<N>() {
+        if x > self.n || x < N::zero() {
             P::neg_infinity()
         } else {
             if self.p.is_zero() && x.is_zero() {
-                num::zero::<P>()
+                P::zero()
             } else if self.p.is_zero() {
                 P::neg_infinity()
-            } else if self.p == num::one::<P>() && x == self.n {
-                num::zero::<P>()
-            } else if self.p == num::one::<P>() {
+            } else if self.p == P::one() && x == self.n {
+                P::zero()
+            } else if self.p == P::one() {
                 P::neg_infinity()
             } else {
                 factorial::ln_binomial(self.n.to_u64().unwrap(), x.to_u64().unwrap()) +
                 P::from(x).unwrap() * self.p.ln() +
-                P::from(self.n - x).unwrap() * (num::one::<P>() - self.p).ln()
+                P::from(self.n - x).unwrap() * (P::one() - self.p).ln()
             }
         }
     }
