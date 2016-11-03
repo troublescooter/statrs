@@ -1,11 +1,31 @@
 //! Provides utility functions for working with floating point precision
 
-/// Standard epsilon, maximum relative precision of IEEE 754 double-precision
-/// floating point numbers (64 bit) e.g. `2^-53`
-pub const F64_PREC: f64 = 0.00000000000000011102230246251565;
+/// A trait for numeric types with a certain finite precision
+/// and accuracy
+pub trait Precision {
+    fn precision() -> Self;
+    fn accuracy() -> Self;
+}
 
-/// Default accuracy for `f64`, equivalent to `0.0 * F64_PREC`
-pub const DEFAULT_F64_ACC: f64 = 0.0000000000000011102230246251565;
+impl Precision for f64 {
+    fn precision() -> Self {
+        2f64.powi(-53)
+    }
+
+    fn accuracy() -> Self {
+        10f64 * Self::precision()
+    }
+}
+
+impl Precision for f32 {
+    fn precision() -> Self {
+        232.powi(-24)
+    }
+
+    fn accuracy() -> Self {
+        10f32 * Self::precision()
+    }
+}
 
 /// Returns true if `a` and `b `are within `acc` of each other.
 /// If `a` or `b` are infinite, returns `true` only if both are

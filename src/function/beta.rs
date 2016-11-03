@@ -2,9 +2,11 @@
 //! function
 
 use std::f64;
+use num;
 use error::StatsError;
 use function::gamma;
 use prec;
+use Float;
 
 /// Computes the natural logarithm
 /// of the beta function
@@ -15,9 +17,13 @@ use prec;
 /// # Panics
 ///
 /// if `a <= 0.0` or `b <= 0.0`
-pub fn ln_beta(a: f64, b: f64) -> f64 {
-    assert!(a > 0.0, format!("{}", StatsError::ArgMustBePositive("a")));
-    assert!(b > 0.0, format!("{}", StatsError::ArgMustBePositive("b")));
+pub fn ln_beta<T>(a: T, b: T) -> T
+    where T: Float
+{
+    assert!(a > num::zero::<T>(),
+            format!("{}", StatsError::ArgMustBePositive("a")));
+    assert!(b > num::zero::<T>(),
+            format!("{}", StatsError::ArgMustBePositive("b")));
     gamma::ln_gamma(a) + gamma::ln_gamma(b) - gamma::ln_gamma(a + b)
 }
 
@@ -29,7 +35,9 @@ pub fn ln_beta(a: f64, b: f64) -> f64 {
 /// # Panics
 ///
 /// if `a <= 0.0` or `b <= 0.0`
-pub fn beta(a: f64, b: f64) -> f64 {
+pub fn beta<T>(a: T, b: T) -> T
+    where T: Float
+{
     ln_beta(a, b).exp()
 }
 
@@ -41,7 +49,9 @@ pub fn beta(a: f64, b: f64) -> f64 {
 /// # Panics
 ///
 /// If `a < 0.0`, `b < 0.0`, `x < 0.0`, or `x > 1.0`
-pub fn beta_inc(a: f64, b: f64, x: f64) -> f64 {
+pub fn beta_inc<T>(a: T, b: T, x: T) -> T
+    where T: Float
+{
     beta_reg(a, b, x) * beta(a, b)
 }
 
@@ -54,83 +64,87 @@ pub fn beta_inc(a: f64, b: f64, x: f64) -> f64 {
 /// # Panics
 ///
 /// if `a < 0.0`, `b < 0.0`, `x < 0.0`, or `x > 1.0`
-pub fn beta_reg(a: f64, b: f64, x: f64) -> f64 {
-    assert!(a >= 0.0, format!("{}", StatsError::ArgNotNegative("a")));
-    assert!(b >= 0.0, format!("{}", StatsError::ArgNotNegative("b")));
-    assert!(x >= 0.0 && x <= 1.0,
+pub fn beta_reg<T>(a: T, b: T, x: T) -> T
+    where T: Float
+{
+    let zero = num::zero::<T>();
+    let one = num::one::<T>();
+
+    assert!(a >= zero, format!("{}", StatsError::ArgNotNegative("a")));
+    assert!(b >= zero, format!("{}", StatsError::ArgNotNegative("b")));
+    assert!(x >= zero && x <= one,
             format!("{}", StatsError::ArgIntervalIncl("x", 0.0, 1.0)));
 
-    let bt = match x {
-        0.0 | 1.0 => 0.0,
-        _ => {
-            (gamma::ln_gamma(a + b) - gamma::ln_gamma(a) - gamma::ln_gamma(b) + a * x.ln() +
-             b * (1.0 - x).ln())
-                .exp()
-        }
+    let bt = if x.is_zero() || x == one {
+        zero
+    } else {
+        (gamma::ln_gamma(a + b) - gamma::ln_gamma(a) - gamma::ln_gamma(b) + a * x.ln() +
+         b * (one - x).ln())
+            .exp()
     };
-    let symm_transform = x >= (a + 1.0) / (a + b + 2.0);
-    let eps = prec::F64_PREC;
-    let fpmin = f64::MIN_POSITIVE / eps;
+    let symm_transform = x >= (a + one) / (a + b + T::from(2.0).unwrap());
+    let eps = T::precision();
+    let fpmin = T::min_positive_value() / eps;
 
     let mut a = a;
     let mut b = b;
     let mut x = x;
     if symm_transform {
         let swap = a;
-        x = 1.0 - x;
+        x = one - x;
         a = b;
         b = swap;
     }
 
     let qab = a + b;
-    let qap = a + 1.0;
-    let qam = a - 1.0;
-    let mut c = 1.0;
-    let mut d = 1.0 - qab * x / qap;
+    let qap = a + one;
+    let qam = a - one;
+    let mut c = one;
+    let mut d = one - qab * x / qap;
 
     if d.abs() < fpmin {
         d = fpmin;
     }
-    d = 1.0 / d;
+    d = one / d;
     let mut h = d;
 
     for m in 1..141 {
-        let m = m as f64;
-        let m2 = m * 2.0;
+        let m = T::from(m).unwrap();
+        let m2 = m * T::from(2.0).unwrap();
         let mut aa = m * (b - m) * x / ((qam + m2) * (a + m2));
-        d = 1.0 + aa * d;
+        d = one + aa * d;
 
         if d.abs() < fpmin {
             d = fpmin;
         }
 
-        c = 1.0 + aa / c;
+        c = one + aa / c;
         if c.abs() < fpmin {
             c = fpmin;
         }
 
-        d = 1.0 / d;
+        d = one / d;
         h = h * d * c;
         aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
-        d = 1.0 + aa * d;
+        d = one + aa * d;
 
         if d.abs() < fpmin {
             d = fpmin;
         }
 
-        c = 1.0 + aa / c;
+        c = one + aa / c;
 
         if c.abs() < fpmin {
             c = fpmin;
         }
 
-        d = 1.0 / d;
+        d = one / d;
         let del = d * c;
-        h *= del;
+        h = h * del;
 
-        if (del - 1.0).abs() <= eps {
+        if (del - one).abs() <= eps {
             return if symm_transform {
-                1.0 - bt * h / a
+                one - bt * h / a
             } else {
                 bt * h / a
             };
@@ -138,7 +152,7 @@ pub fn beta_reg(a: f64, b: f64, x: f64) -> f64 {
     }
 
     if symm_transform {
-        1.0 - bt * h / a
+        one - bt * h / a
     } else {
         bt * h / a
     }
