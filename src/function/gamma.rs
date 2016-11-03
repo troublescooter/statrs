@@ -90,7 +90,9 @@ pub fn gamma<T>(x: T) -> T
 /// # Panics
 ///
 /// if `a` or `x` are less than `0.0`
-pub fn gamma_ui(a: f64, x: f64) -> f64 {
+pub fn gamma_ui<T>(a: T, x: T) -> T
+    where T: Float
+{
     gamma_ur(a, x) * gamma(a)
 }
 
@@ -103,7 +105,9 @@ pub fn gamma_ui(a: f64, x: f64) -> f64 {
 /// # Panics
 ///
 /// if `a` or `x` are less than `0.0`
-pub fn gamma_li(a: f64, x: f64) -> f64 {
+pub fn gamma_li<T>(a: T, x: T) -> T
+    where T: float
+{
     gamma_lr(a, x) * gamma(a)
 }
 
