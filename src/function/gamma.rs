@@ -47,8 +47,7 @@ pub fn ln_gamma<T>(x: T) -> T
                   |s, t| s + t.1 / (x + t.0 - T::one()));
 
         s.ln() + T::LN_2_SQRT_E_OVER_PI() +
-        (x - T::from(0.5).unwrap()) *
-        ((x - T::from(0.5).unwrap() + T::from(GAMMA_R).unwrap()) / T::E()).ln()
+        (x - T::from(0.5).unwrap()) * ((x - T::from(0.5 + GAMMA_R).unwrap()) / T::E()).ln()
     }
 }
 
@@ -56,23 +55,30 @@ pub fn ln_gamma<T>(x: T) -> T
 /// of 16 floating point digits. The implementation
 /// is derived from "An Analysis of the Lanczos Gamma Approximation",
 /// Glendon Ralph Pugh, 2004 p. 116
-pub fn gamma(x: f64) -> f64 {
-    if x < 0.5 {
+pub fn gamma<T>(x: T) -> T
+    where T: Float
+{
+    if x < T::from(0.5).unwrap() {
         let s = GAMMA_DK.iter()
             .enumerate()
+            .map(|x| (T::from(x.0).unwrap(), T::from(*x.1).unwrap()))
             .skip(1)
-            .fold(GAMMA_DK[0], |s, t| s + t.1 / (t.0 as f64 - x));
+            .fold(T::from(GAMMA_DK[0]).unwrap(), |s, t| s + t.1 / (t.0 - x));
 
-        f64::consts::PI /
-        ((f64::consts::PI * x).sin() * s * consts::TWO_SQRT_E_OVER_PI *
-         ((0.5 - x + GAMMA_R) / f64::consts::E).powf(0.5 - x))
+        T::PI() /
+        ((T::PI() * x).sin() * s * T::TWO_SQRT_E_OVER_PI() *
+         ((T::from(0.5).unwrap() - x + T::from(GAMMA_R).unwrap()) / T::E())
+            .powf(T::from(0.5).unwrap() - x))
     } else {
         let s = GAMMA_DK.iter()
             .enumerate()
+            .map(|x| (T::from(x.0).unwrap(), T::from(*x.1).unwrap()))
             .skip(1)
-            .fold(GAMMA_DK[0], |s, t| s + t.1 / (x + t.0 as f64 - 1.0));
+            .fold(T::from(GAMMA_DK[0]).unwrap(),
+                  |s, t| s + t.1 / (x + t.0 - T::one()));
 
-        s * consts::TWO_SQRT_E_OVER_PI * ((x - 0.5 + GAMMA_R) / f64::consts::E).powf(x - 0.5)
+        s * T::TWO_SQRT_E_OVER_PI() *
+        ((x - T::from(0.5 + GAMMA_R).unwrap()) / T::E()).powf(x - T::from(0.5).unwrap())
     }
 }
 
