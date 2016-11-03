@@ -2,7 +2,6 @@
 //! function
 
 use std::f64;
-use num;
 use error::StatsError;
 use function::gamma;
 use prec;

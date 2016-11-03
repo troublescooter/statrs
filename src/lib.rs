@@ -58,7 +58,9 @@ pub use error::StatsError;
 
 /// Float is a wrapper trait for generic floating point types used
 /// by statrs.
-pub trait Float: num::Float + prec::Precision + NumBase {}
+pub trait Float
+    : num::Float + num::traits::FloatConst + prec::Precision + NumBase {
+}
 
 /// Integer is a wrapper trait for generic integer types used
 /// by statrs

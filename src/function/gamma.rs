@@ -2,12 +2,13 @@ use std::f64;
 use consts;
 use error::StatsError;
 use prec;
+use Float;
 
 /// Auxiliary variable when evaluating the `gamma_ln` function
-const GAMMA_R: f64 = 10.900511;
+const GAMMA_R: f32 = 10.900511;
 
 /// Polynomial coefficients for approximating the `gamma_ln` function
-const GAMMA_DK: &'static [f64] = &[2.48574089138753565546e-5,
+const GAMMA_DK: &'static [f32] = &[2.48574089138753565546e-5,
                                    1.05142378581721974210,
                                    -3.45687097222016235469,
                                    4.51227709466894823700,
@@ -24,23 +25,30 @@ const GAMMA_DK: &'static [f64] = &[2.48574089138753565546e-5,
 /// The implementation is derived from
 /// "An Analysis of the Lanczos Gamma Approximation",
 /// Glendon Ralph Pugh, 2004 p. 116
-pub fn ln_gamma(x: f64) -> f64 {
-    if x < 0.5 {
+pub fn ln_gamma<T>(x: T) -> T
+    where T: Float
+{
+    if x < T::from(0.5).unwrap() {
         let s = GAMMA_DK.iter()
             .enumerate()
+            .map(|x| (T::from(x.0).unwrap(), T::from(*x.1).unwrap()))
             .skip(1)
-            .fold(GAMMA_DK[0], |s, t| s + t.1 / (t.0 as f64 - x));
+            .fold(T::from(GAMMA_DK[0]).unwrap(), |s, t| s + t.1 / (t.0 - x));
 
-        consts::LN_PI - (f64::consts::PI * x).sin().ln() - s.ln() - consts::LN_2_SQRT_E_OVER_PI -
-        (0.5 - x) * ((0.5 - x + GAMMA_R) / f64::consts::E).ln()
+        consts::LN_PI - (T::PI() * x).sin().ln() - s.ln() - consts::LN_2_SQRT_E_OVER_PI -
+        (T::from(0.5).unwrap() - x) *
+        ((T::from(0.5).unwrap() - x + T::from(GAMMA_R).unwrap()) / T::E()).ln()
     } else {
         let s = GAMMA_DK.iter()
             .enumerate()
+            .map(|x| (T::from(x.0).unwrap(), T::from(*x.1).unwrap()))
             .skip(1)
-            .fold(GAMMA_DK[0], |s, t| s + t.1 / (x + t.0 as f64 - 1.0));
+            .fold(T::from(GAMMA_DK[0]).unwrap(),
+                  |s, t| s + t.1 / (x + t.0 - T::one()));
 
         s.ln() + consts::LN_2_SQRT_E_OVER_PI +
-        (x - 0.5) * ((x - 0.5 + GAMMA_R) / f64::consts::E).ln()
+        (x - T::from(0.5).unwrap()) *
+        ((x - T::from(0.5).unwrap() + T::from(GAMMA_R).unwrap()) / T::E()).ln()
     }
 }
 
