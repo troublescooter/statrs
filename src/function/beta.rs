@@ -20,9 +20,9 @@ use Float;
 pub fn ln_beta<T>(a: T, b: T) -> T
     where T: Float
 {
-    assert!(a > num::zero::<T>(),
+    assert!(a > T::zero(),
             format!("{}", StatsError::ArgMustBePositive("a")));
-    assert!(b > num::zero::<T>(),
+    assert!(b > T::zero(),
             format!("{}", StatsError::ArgMustBePositive("b")));
     gamma::ln_gamma(a) + gamma::ln_gamma(b) - gamma::ln_gamma(a + b)
 }
@@ -67,22 +67,21 @@ pub fn beta_inc<T>(a: T, b: T, x: T) -> T
 pub fn beta_reg<T>(a: T, b: T, x: T) -> T
     where T: Float
 {
-    let zero = num::zero::<T>();
-    let one = num::one::<T>();
-
-    assert!(a >= zero, format!("{}", StatsError::ArgNotNegative("a")));
-    assert!(b >= zero, format!("{}", StatsError::ArgNotNegative("b")));
-    assert!(x >= zero && x <= one,
+    assert!(a >= T::zero(),
+            format!("{}", StatsError::ArgNotNegative("a")));
+    assert!(b >= T::zero(),
+            format!("{}", StatsError::ArgNotNegative("b")));
+    assert!(x >= T::zero() && x <= T::one(),
             format!("{}", StatsError::ArgIntervalIncl("x", 0.0, 1.0)));
 
-    let bt = if x.is_zero() || x == one {
-        zero
+    let bt = if x.is_zero() || x == T::one() {
+        T::zero()
     } else {
         (gamma::ln_gamma(a + b) - gamma::ln_gamma(a) - gamma::ln_gamma(b) + a * x.ln() +
-         b * (one - x).ln())
+         b * (T::one() - x).ln())
             .exp()
     };
-    let symm_transform = x >= (a + one) / (a + b + T::from(2.0).unwrap());
+    let symm_transform = x >= (a + T::one()) / (a + b + T::from(2.0).unwrap());
     let eps = T::precision();
     let fpmin = T::min_positive_value() / eps;
 
@@ -91,60 +90,60 @@ pub fn beta_reg<T>(a: T, b: T, x: T) -> T
     let mut x = x;
     if symm_transform {
         let swap = a;
-        x = one - x;
+        x = T::one() - x;
         a = b;
         b = swap;
     }
 
     let qab = a + b;
-    let qap = a + one;
-    let qam = a - one;
-    let mut c = one;
-    let mut d = one - qab * x / qap;
+    let qap = a + T::one();
+    let qam = a - T::one();
+    let mut c = T::one();
+    let mut d = T::one() - qab * x / qap;
 
     if d.abs() < fpmin {
         d = fpmin;
     }
-    d = one / d;
+    d = T::one() / d;
     let mut h = d;
 
     for m in 1..141 {
         let m = T::from(m).unwrap();
         let m2 = m * T::from(2.0).unwrap();
         let mut aa = m * (b - m) * x / ((qam + m2) * (a + m2));
-        d = one + aa * d;
+        d = T::one() + aa * d;
 
         if d.abs() < fpmin {
             d = fpmin;
         }
 
-        c = one + aa / c;
+        c = T::one() + aa / c;
         if c.abs() < fpmin {
             c = fpmin;
         }
 
-        d = one / d;
+        d = T::one() / d;
         h = h * d * c;
         aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
-        d = one + aa * d;
+        d = T::one() + aa * d;
 
         if d.abs() < fpmin {
             d = fpmin;
         }
 
-        c = one + aa / c;
+        c = T::one() + aa / c;
 
         if c.abs() < fpmin {
             c = fpmin;
         }
 
-        d = one / d;
+        d = T::one() / d;
         let del = d * c;
         h = h * del;
 
-        if (del - one).abs() <= eps {
+        if (del - T::one()).abs() <= eps {
             return if symm_transform {
-                one - bt * h / a
+                T::one() - bt * h / a
             } else {
                 bt * h / a
             };
@@ -152,7 +151,7 @@ pub fn beta_reg<T>(a: T, b: T, x: T) -> T
     }
 
     if symm_transform {
-        one - bt * h / a
+        T::one() - bt * h / a
     } else {
         bt * h / a
     }
