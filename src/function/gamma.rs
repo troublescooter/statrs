@@ -212,10 +212,10 @@ pub fn gamma_lr<T>(a: T, x: T) -> T
     let big = T::from(4503599627370496.0).unwrap();
     let big_inv = T::from(2.22044604925031308085e-16).unwrap();
 
-    if prec::almost_eq(a, 0.0, T::accuracy()) {
+    if prec::almost_eq(a, T::zero(), T::accuracy()) {
         return T::one();
     }
-    if prec::almost_eq(x, 0.0, T::accuracy()) {
+    if prec::almost_eq(x, T::zero(), T::accuracy()) {
         return T::one();
     }
 
@@ -231,9 +231,9 @@ pub fn gamma_lr<T>(a: T, x: T) -> T
         let mut c2 = T::one();
         let mut ans2 = T::one();
         loop {
-            r2 += T::one();
-            c2 *= x / r2;
-            ans2 += c2;
+            r2 = r2 + T::one();
+            c2 = c2 * x / r2;
+            ans2 = ans2 + c2;
 
             if c2 / ans2 <= eps {
                 break;
@@ -267,10 +267,10 @@ pub fn gamma_lr<T>(a: T, x: T) -> T
         q2 = q;
 
         if p.abs() > big {
-            p3 *= big_inv;
-            p2 *= big_inv;
-            q3 *= big_inv;
-            q2 *= big_inv;
+            p3 = p3 * big_inv;
+            p2 = p2 * big_inv;
+            q3 = q3 * big_inv;
+            q2 = q2 * big_inv;
         }
 
         if q != T::zero() {

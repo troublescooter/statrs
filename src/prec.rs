@@ -1,5 +1,7 @@
 //! Provides utility functions for working with floating point precision
 
+use Float;
+
 /// A trait for numeric types with a certain finite precision
 /// and accuracy
 pub trait Precision {
