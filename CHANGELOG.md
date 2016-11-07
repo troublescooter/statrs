@@ -1,4 +1,13 @@
-v0.3.0
+### v0.4.0
+- Created traits for floating-point, signed integer, and unsigned integer data types, `Float`, `Signed`, and `Unsigned` respectively
+- Constants inside `statrs::consts` are now implemented as functions on floating point data types (e.g. `f64::SQRT_2PI()`)
+- All special functions in `beta` are now generic over the floating point data types
+- All special functions in `gamma` are now generic over the floating point data types
+- `factorial` special functions are now traits implemented for the floating point data types
+- `Binomial` distribution is now generic over the floating point data types
+- `Bernoulli` distribution is now generic over the floating point data types
+
+### v0.3.0
 - Moved methods `min` and `max` out of trait `Univariate` into their own respective traits `Min` and `Max`
 - Traits `Min`, `Max`, `Mean`, `Variance`, `Entropy`, `Skewness`, `Median`, and `Mode` moved from `distribution` module to `statistics` module
 - `Mean`, `Variance`, `Entropy`, `Skewness`, `Median`, and `Mode` no longer depend on `Distribution` trait
@@ -12,7 +21,7 @@ v0.3.0
 - `InplaceStatistics` renamed to `OrderStatistics`, all methods in `InplaceStatistics` have `_inplace` trimmed from method name.
 - Inverse DiGamma function implemented with signature `gamma::inv_digamma(x: f64) -> f64`
 
-v0.2.0
+### v0.2.0
 - Created `statistics` module and `Statistics` trait
 - `Statistics` trait implementation for `[f64]`
 - Implemented `Beta` distribution

@@ -159,7 +159,7 @@ impl<P, N> Univariate<N, P> for Binomial<P, N>
     ///
     /// # Remarks
     ///
-    /// Returns `0,0` if `x < 0.0` and `1.0` if `x >= n`
+    /// Returns `0.0` if `x < 0.0` and `1.0` if `x >= n`
     ///
     /// # Formula
     ///
@@ -381,7 +381,7 @@ impl<P, N> Discrete<N, P> for Binomial<P, N>
     ///
     /// # Remarks
     ///
-    /// Returns `f64::NEG_INFINITY` if `x > n || x < 0`
+    /// Returns negative infinity if `x > n || x < 0`
     ///
     /// # Formula
     ///
