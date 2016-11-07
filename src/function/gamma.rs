@@ -290,43 +290,45 @@ pub fn gamma_lr<T>(a: T, x: T) -> T
 /// the log of the gamma function. The implementation is based on
 /// "Algorithm AS 103", Jose Bernardo, Applied Statistics, Volume 25, Number 3
 /// 1976, pages 315 - 317
-pub fn digamma(x: f64) -> f64 {
-    let c = 12.0;
-    let d1 = -0.57721566490153286;
-    let d2 = 1.6449340668482264365;
-    let s = 1e-6;
-    let s3 = 1.0 / 12.0;
-    let s4 = 1.0 / 120.0;
-    let s5 = 1.0 / 252.0;
-    let s6 = 1.0 / 240.0;
-    let s7 = 1.0 / 132.0;
+pub fn digamma<T>(x: T) -> T
+    where T: Float
+{
+    let c = T::from(12.0).unwrap();
+    let d1 = T::from(-0.57721566490153286).unwrap();
+    let d2 = T::from(1.6449340668482264365).unwrap();
+    let s = T::from(1e-6).unwrap();
+    let s3 = T::from(1.0 / 12.0).unwrap();
+    let s4 = T::from(1.0 / 120.0).unwrap();
+    let s5 = T::from(1.0 / 252.0).unwrap();
+    let s6 = T::from(1.0 / 240.0).unwrap();
+    let s7 = T::from(1.0 / 132.0).unwrap();
 
-    if x == f64::NEG_INFINITY || x.is_nan() {
-        return f64::NAN;
+    if x == T::neg_infinity() || x.is_nan() {
+        return T::nan();
     }
-    if x <= 0.0 && x.floor() == x {
-        return f64::NEG_INFINITY;
+    if x <= T::zero() && x.floor() == x {
+        return T::neg_infinity();
     }
-    if x < 0.0 {
-        return digamma(1.0 - x) + f64::consts::PI / (-f64::consts::PI * x).tan();
+    if x < T::zero() {
+        return digamma(T::one() - x) + T::PI() / (-T::PI() * x).tan();
     }
     if x <= s {
-        return d1 - 1.0 / x + d2 * x;
+        return d1 - T::one() / x + d2 * x;
     }
 
-    let mut result = 0.0;
+    let mut result = T::zero();
     let mut z = x;
     while z < c {
-        result -= 1.0 / z;
-        z += 1.0;
+        result = result - T::one() / z;
+        z = z + T::one();
     }
 
     if z >= c {
-        let mut r = 1.0 / z;
-        result += z.ln() - 0.5 * r;
-        r *= r;
+        let mut r = T::one() / z;
+        result = result + z.ln() - T::from(0.5).unwrap() * r;
+        r = r * r;
 
-        result -= r * (s3 - (r * (s4 - (r * (s5 - (r * (s6 - (r * s7))))))));
+        result = result - r * (s3 - (r * (s4 - (r * (s5 - (r * (s6 - (r * s7))))))));
     }
     result
 }

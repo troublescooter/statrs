@@ -94,8 +94,6 @@ impl Integer for i8 {}
 impl Integer for i16 {}
 impl Integer for i32 {}
 impl Integer for i64 {}
-impl Integer for f32 {}
-impl Integer for f64 {}
 
 /// Base trait for numeric types
 pub trait NumBase: num::NumCast + num::ToPrimitive + rand::Rand + Clone {}
