@@ -333,21 +333,24 @@ pub fn digamma<T>(x: T) -> T
     result
 }
 
-pub fn inv_digamma(x: f64) -> f64 {
+pub fn inv_digamma<T>(x: T) -> T
+    where T: Float
+{
     if x.is_nan() {
-        return f64::NAN;
+        return T::nan();
     }
-    if x == f64::NEG_INFINITY {
-        return 0.0;
+    if x == T::neg_infinity() {
+        return T::zero();
     }
-    if x == f64::INFINITY {
-        return f64::INFINITY;
+    if x == T::infinity() {
+        return T::infinity();
     }
     let mut y = x.exp();
-    let mut i = 1.0;
-    while i > 1e-15 {
-        y += i * signum(x - digamma(y));
-        i /= 2.0;
+    let mut i = T::one();
+    let limit = T::from(1e-15).unwrap();
+    while i > limit {
+        y = y + i * signum(x - digamma(y));
+        i = i / T::from(2.0).unwrap();
     }
     y
 }
@@ -355,10 +358,13 @@ pub fn inv_digamma(x: f64) -> f64 {
 // modified signum that returns 0.0 if x == 0.0. Used
 // by inv_digamma, may consider extracting into a public
 // method
-fn signum(x: f64) -> f64 {
-    match x {
-        0.0 => 0.0,
-        _ => x.signum(),
+fn signum<T>(x: T) -> T
+    where T: Float
+{
+    if x == T::zero() {
+        T::zero()
+    } else {
+        x.signum()
     }
 }
 
