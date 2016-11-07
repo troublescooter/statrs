@@ -66,6 +66,22 @@ pub trait Float
 impl Float for f64 {}
 impl Float for f32 {}
 
+/// Signed is a wrapper trait for generic signed integer types
+pub trait Signed: Integer + num::Signed {}
+
+impl Signed for i8 {}
+impl Signed for i16 {}
+impl Signed for i32 {}
+impl Signed for i64 {}
+
+/// Unsigned is a wrapper trait for generic unsigned integer types
+pub trait Unsigned: Integer + num::Unsigned {}
+
+impl Unsigned for u8 {}
+impl Unsigned for u16 {}
+impl Unsigned for u32 {}
+impl Unsigned for u64 {}
+
 /// Integer is a wrapper trait for generic integer types used
 /// by statrs
 pub trait Integer: num::Integer + NumBase {}

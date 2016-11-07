@@ -7,7 +7,7 @@ use statistics::*;
 use distribution::{Univariate, Discrete, Distribution};
 use result::Result;
 use error::StatsError;
-use {Float, Integer};
+use {Float, Unsigned};
 
 /// Implements the [Binomial](https://en.wikipedia.org/wiki/Binomial_distribution)
 /// distribution
@@ -27,7 +27,7 @@ use {Float, Integer};
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     p: P,
     n: N,
@@ -35,7 +35,7 @@ pub struct Binomial<P, N>
 
 impl<P, N> Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Constructs a new binomial distribution
     /// with a given `p` probability of success of `n`
@@ -44,7 +44,7 @@ impl<P, N> Binomial<P, N>
     /// # Errors
     ///
     /// Returns an error if `p` is `NaN`, less than `0.0`,
-    /// greater than `1.0`, or if `n` is less than `0`
+    /// or greater than `1.0`
     ///
     /// # Examples
     ///
@@ -54,11 +54,11 @@ impl<P, N> Binomial<P, N>
     /// let mut result = Binomial::new(0.5, 5);
     /// assert!(result.is_ok());
     ///
-    /// result = Binomial::new(-0.5, -5);
+    /// result = Binomial::new(-0.5, 5);
     /// assert!(result.is_err());
     /// ```
     pub fn new(p: P, n: N) -> Result<Binomial<P, N>> {
-        if p.is_nan() || p < P::zero() || p > P::one() || n < N::zero() {
+        if p.is_nan() || p < P::zero() || p > P::one() {
             Err(StatsError::BadParams)
         } else {
             Ok(Binomial { p: p, n: n })
@@ -98,7 +98,7 @@ impl<P, N> Binomial<P, N>
 
 impl<P, N> Sample<P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Generate a random sample from a binomial
     /// distribution using `r` as the source of randomness.
@@ -113,7 +113,7 @@ impl<P, N> Sample<P> for Binomial<P, N>
 /// Refer [here](#method.sample-1) for implementation details
 impl<P, N> IndependentSample<P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     fn ind_sample<R: Rng>(&self, r: &mut R) -> P {
         super::Distribution::sample(self, r)
@@ -122,7 +122,7 @@ impl<P, N> IndependentSample<P> for Binomial<P, N>
 
 impl<P, N> Distribution<P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Generate a random sample from the binomial distribution
     /// using `r` as the source of randomness  where the range of
@@ -152,7 +152,7 @@ impl<P, N> Distribution<P> for Binomial<P, N>
 
 impl<P, N> Univariate<N, P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Calulcates the cumulative distribution function for the
     /// binomial distribution at `x`
@@ -184,7 +184,7 @@ impl<P, N> Univariate<N, P> for Binomial<P, N>
 
 impl<P, N> Min<N> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Returns the minimum value in the domain of the
     /// binomial distribution representable by a 64-bit
@@ -202,7 +202,7 @@ impl<P, N> Min<N> for Binomial<P, N>
 
 impl<P, N> Max<N> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Returns the maximum value in the domain of the
     /// binomial distribution representable by a 64-bit
@@ -220,7 +220,7 @@ impl<P, N> Max<N> for Binomial<P, N>
 
 impl<P, N> Mean<P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Returns the mean of the binomial distribution
     ///
@@ -236,7 +236,7 @@ impl<P, N> Mean<P> for Binomial<P, N>
 
 impl<P, N> Variance<P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Returns the variance of the binomial distribution
     ///
@@ -263,7 +263,7 @@ impl<P, N> Variance<P> for Binomial<P, N>
 
 impl<P, N> Entropy<P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Returns the entropy of the binomial distribution
     ///
@@ -286,7 +286,7 @@ impl<P, N> Entropy<P> for Binomial<P, N>
 
 impl<P, N> Skewness<P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Returns the skewness of the binomial distribution
     ///
@@ -303,7 +303,7 @@ impl<P, N> Skewness<P> for Binomial<P, N>
 
 impl<P, N> Median<P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Returns the median of the binomial distribution
     ///
@@ -319,7 +319,7 @@ impl<P, N> Median<P> for Binomial<P, N>
 
 impl<P, N> Mode<N> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Returns the mode for the binomial distribution
     ///
@@ -341,7 +341,7 @@ impl<P, N> Mode<N> for Binomial<P, N>
 
 impl<P, N> Discrete<N, P> for Binomial<P, N>
     where P: Float,
-          N: Integer
+          N: Unsigned
 {
     /// Calculates the probability mass function for the binomial
     /// distribution at `x`
@@ -418,40 +418,40 @@ mod test {
     use statistics::*;
     use distribution::{Univariate, Discrete, Binomial};
 
-    fn try_create(p: f64, n: i64) -> Binomial<f64, i64> {
+    fn try_create(p: f64, n: u64) -> Binomial<f64, u64> {
         let n = Binomial::new(p, n);
         assert!(n.is_ok());
         n.unwrap()
     }
 
-    fn create_case(p: f64, n: i64) {
+    fn create_case(p: f64, n: u64) {
         let n = try_create(p, n);
         assert_eq!(p, n.p());
     }
 
-    fn bad_create_case(p: f64, n: i64) {
+    fn bad_create_case(p: f64, n: u64) {
         let n = Binomial::new(p, n);
         assert!(n.is_err());
     }
 
-    fn get_value<T, F>(p: f64, n: i64, eval: F) -> T
+    fn get_value<T, F>(p: f64, n: u64, eval: F) -> T
         where T: PartialEq + Debug,
-              F: Fn(Binomial<f64, i64>) -> T
+              F: Fn(Binomial<f64, u64>) -> T
     {
         let n = try_create(p, n);
         eval(n)
     }
 
-    fn test_case<T, F>(p: f64, n: i64, expected: T, eval: F)
+    fn test_case<T, F>(p: f64, n: u64, expected: T, eval: F)
         where T: PartialEq + Debug,
-              F: Fn(Binomial<f64, i64>) -> T
+              F: Fn(Binomial<f64, u64>) -> T
     {
         let x = get_value(p, n, eval);
         assert_eq!(expected, x);
     }
 
-    fn test_almost<F>(p: f64, n: i64, expected: f64, acc: f64, eval: F)
-        where F: Fn(Binomial<f64, i64>) -> f64
+    fn test_almost<F>(p: f64, n: u64, expected: f64, acc: f64, eval: F)
+        where F: Fn(Binomial<f64, u64>) -> f64
     {
         let x = get_value(p, n, eval);
         assert_almost_eq!(expected, x, acc);
