@@ -2,7 +2,7 @@
 //! distribution values as constants
 
 // Trait for floating point numeric type constants
-pub trait FloatConsts {
+pub trait FloatConst {
     /// Constant value for `sqrt(2 * pi)`
     fn SQRT_2PI() -> Self;
 
@@ -25,9 +25,9 @@ pub trait FloatConsts {
     fn EULER_MASCHERONI() -> Self;
 }
 
-macro_rules! impl_float_consts_for {
+macro_rules! impl_float_const_for {
     ($T:ty) => (
-        impl FloatConsts for $T {
+        impl FloatConst for $T {
             fn SQRT_2PI() -> Self {
                 SQRT_2PI as $T
             }
@@ -58,8 +58,8 @@ macro_rules! impl_float_consts_for {
         }
     );
 }
-impl_float_consts_for!(f64);
-impl_float_consts_for!(f32);
+impl_float_const_for!(f64);
+impl_float_const_for!(f32);
 
 const SQRT_2PI: f64 = 2.5066282746310005024157652848110452530069867406099;
 const LN_PI: f64 = 1.1447298858494001741434273513530587116472948129153;

@@ -10,21 +10,21 @@ pub trait Precision {
 }
 
 impl Precision for f64 {
-    fn precision() -> Self {
+    fn precision() -> f64 {
         2f64.powi(-53)
     }
 
-    fn accuracy() -> Self {
+    fn accuracy() -> f64 {
         10f64 * Self::precision()
     }
 }
 
 impl Precision for f32 {
-    fn precision() -> Self {
+    fn precision() -> f32 {
         2f32.powi(-24)
     }
 
-    fn accuracy() -> Self {
+    fn accuracy() -> f32 {
         10f32 * Self::precision()
     }
 }

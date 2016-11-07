@@ -368,7 +368,7 @@ impl<P, N> Discrete<N, P> for Binomial<P, N>
             } else if self.p == P::one() {
                 P::zero()
             } else {
-                (factorial::ln_binomial(self.n.to_u64().unwrap(), x.to_u64().unwrap()) +
+                (P::ln_binomial(self.n.to_usize().unwrap(), x.to_usize().unwrap()) +
                  P::from(x).unwrap() * self.p.ln() +
                  P::from(self.n - x).unwrap() * (P::one() - self.p).ln())
                     .exp()
@@ -401,7 +401,7 @@ impl<P, N> Discrete<N, P> for Binomial<P, N>
             } else if self.p == P::one() {
                 P::neg_infinity()
             } else {
-                factorial::ln_binomial(self.n.to_u64().unwrap(), x.to_u64().unwrap()) +
+                P::ln_binomial(self.n.to_usize().unwrap(), x.to_usize().unwrap()) +
                 P::from(x).unwrap() * self.p.ln() +
                 P::from(self.n - x).unwrap() * (P::one() - self.p).ln()
             }

@@ -59,13 +59,38 @@ pub use error::StatsError;
 /// Float is a wrapper trait for generic floating point types used
 /// by statrs.
 pub trait Float
-    : num::Float + num::traits::FloatConst + consts::FloatConsts + prec::Precision + NumBase
+    : num::Float + num::traits::FloatConst + consts::FloatConst + prec::Precision + function::factorial::Binomial + NumBase
     {
 }
+
+impl Float for f64 {}
+impl Float for f32 {}
 
 /// Integer is a wrapper trait for generic integer types used
 /// by statrs
 pub trait Integer: num::Integer + NumBase {}
 
+impl Integer for u8 {}
+impl Integer for u16 {}
+impl Integer for u32 {}
+impl Integer for u64 {}
+impl Integer for i8 {}
+impl Integer for i16 {}
+impl Integer for i32 {}
+impl Integer for i64 {}
+impl Integer for f32 {}
+impl Integer for f64 {}
+
 /// Base trait for numeric types
-trait NumBase: num::NumCast + num::ToPrimitive + rand::Rand + Clone {}
+pub trait NumBase: num::NumCast + num::ToPrimitive + rand::Rand + Clone {}
+
+impl NumBase for u8 {}
+impl NumBase for u16 {}
+impl NumBase for u32 {}
+impl NumBase for u64 {}
+impl NumBase for i8 {}
+impl NumBase for i16 {}
+impl NumBase for i32 {}
+impl NumBase for i64 {}
+impl NumBase for f32 {}
+impl NumBase for f64 {}

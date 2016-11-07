@@ -1,73 +1,122 @@
-use std::f64;
+use std::{f32, f64};
 use std::sync::{Once, ONCE_INIT};
 use function::gamma;
 
-/// The maximum factorial representable
-/// by a 64-bit floating point without
-/// overflowing
-pub const MAX_ARG: u64 = 170;
+pub trait Factorial {
+    /// Computes the factorial function `x -> x!`.
+    ///
+    /// # Remarks
+    ///
+    /// Returns infinity if `x > max_arg()`
+    fn factorial(x: usize) -> Self;
 
-/// Computes the factorial function `x -> x!` for
-/// `170 >= x >= 0`. All factorials larger than `170!`
-/// will overflow an `f64`.
-///
-/// # Remarks
-///
-/// Returns `f64::INFINITY` if `x > 170`
-pub fn factorial(x: u64) -> f64 {
-    if x > MAX_ARG {
-        f64::INFINITY
-    } else {
-        get_fcache()[x as usize]
+    /// Computes the logarithmic factorial fucntion `x -> ln(x!)`
+    /// for `x >= 0`
+    ///
+    /// # Remarks
+    ///
+    /// Returns `0.0` if `x <= 1`
+    fn ln_factorial(x: usize) -> Self;
+
+    /// The maximum argument size for `factorial(x)`
+    /// before the return value will overflow
+    fn max_arg() -> usize;
+}
+
+impl Factorial for f64 {
+    fn factorial(x: usize) -> f64 {
+        if x > Self::max_arg() {
+            f64::INFINITY
+        } else {
+            get_fcache()[x]
+        }
+    }
+
+    fn ln_factorial(x: usize) -> f64 {
+        if x <= 1 {
+            0.0
+        } else if x > Self::max_arg() {
+            gamma::ln_gamma::<f64>(x as f64 + 1.0)
+        } else {
+            get_fcache()[x].ln()
+        }
+    }
+
+    fn max_arg() -> usize {
+        170
     }
 }
 
-/// Computes the logarithmic factorial function `x -> ln(x!)`
-/// for `x >= 0`.
-///
-/// # Remarks
-///
-/// Returns `0.0` if `x <= 1`
-pub fn ln_factorial(x: u64) -> f64 {
-    if x <= 1 {
-        0.0
-    } else if x > MAX_ARG {
-        gamma::ln_gamma(x as f64 + 1.0)
-    } else {
-        get_fcache()[x as usize].ln()
+impl Factorial for f32 {
+    fn factorial(x: usize) -> f32 {
+        if x > Self::max_arg() {
+            f32::INFINITY
+        } else {
+            get_fcache()[x] as f32
+        }
+    }
+
+    fn ln_factorial(x: usize) -> f32 {
+        if x <= 1 {
+            0.0
+        } else if x > Self::max_arg() {
+            gamma::ln_gamma::<f32>(x as f32 + 1.0)
+        } else {
+            get_fcache()[x].ln() as f32
+        }
+    }
+
+    fn max_arg() -> usize {
+        34
     }
 }
 
-/// Computes the binomial coefficient `n choose k`
-/// where `k` and `n` are non-negative values.
-///
-/// # Remarks
-///
-/// Returns `0.0` if `k > n`
-pub fn binomial(n: u64, k: u64) -> f64 {
-    if k > n {
-        0.0
-    } else {
-        (0.5 + (ln_factorial(n) - ln_factorial(k) - ln_factorial(n - k)).exp()).floor()
-    }
+pub trait Binomial {
+    /// Computes the binomial coefficient `n choose k`
+    /// where `k` and `n` are non-negative values.
+    ///
+    /// # Remarks
+    ///
+    /// Returns `0.0` if `k > n`
+    fn binomial(n: usize, k: usize) -> Self;
+
+    /// Computes the natural logarithm of the binomial coefficient
+    /// `ln(n choose k)` where `k` and `n` are non-negative values
+    ///
+    /// # Remarks
+    ///
+    /// Returns negative infinity if `k > n`
+    fn ln_binomial(n: usize, k: usize) -> Self;
 }
 
-/// Computes the natural logarithm of the binomial coefficient
-/// `ln(n choose k)` where `k` and `n` are non-negative values
-///
-/// # Remarks
-///
-/// Returns `f64::NEG_INFINITY` if `k > n`
-pub fn ln_binomial(n: u64, k: u64) -> f64 {
-    if k > n {
-        f64::NEG_INFINITY
-    } else {
-        ln_factorial(n) - ln_factorial(k) - ln_factorial(n - k)
-    }
+macro_rules! impl_binomial_for {
+    ($T:ty, $ninf:expr) => (
+        impl Binomial for $T {
+            fn binomial(n: usize, k: usize) -> $T {
+                if k > n {
+                    0.0
+                } else {
+                    (0.5 +
+                    (Self::ln_factorial(n) - Self::ln_factorial(k) - Self::ln_factorial(n - k)).exp())
+                        .floor()
+                }
+            }
+
+            fn ln_binomial(n: usize, k: usize) -> $T {
+                if k > n {
+                    $ninf
+                } else {
+                    Self::ln_factorial(n) - Self::ln_factorial(k) - Self::ln_factorial(n - k)
+                }
+            }
+        }
+    );
 }
+impl_binomial_for!(f64, f64::NEG_INFINITY);
+impl_binomial_for!(f32, f32::NEG_INFINITY);
 
 // Initialization for pre-computed cache of 171 factorial
-// values 0!...170!
+// values 0!...170! for f64
 const CACHE_SIZE: usize = 171;
 
 static mut FCACHE: &'static mut [f64; CACHE_SIZE] = &mut [1.0; CACHE_SIZE];
@@ -96,42 +145,42 @@ mod test {
         let mut factorial = 1.0;
         for i in 1..171 {
             factorial *= i as f64;
-            assert_eq!(super::factorial(i), factorial);
-            assert_eq!(super::ln_factorial(i), factorial.ln());
+            assert_eq!(f64::factorial(i), factorial);
+            assert_eq!(f64::ln_factorial(i), factorial.ln());
         }
     }
 
     #[test]
     fn test_factorial_overflow() {
-        assert_eq!(super::factorial(172), f64::INFINITY);
-        assert_eq!(super::factorial(u64::MAX), f64::INFINITY);
+        assert_eq!(f64::factorial(172), f64::INFINITY);
+        assert_eq!(f64::factorial(u64::MAX), f64::INFINITY);
     }
 
     #[test]
     fn test_ln_factorial_does_not_overflow() {
-        assert_eq!(super::ln_factorial(1 << 10), 6078.2118847500501140);
-        assert_almost_eq!(super::ln_factorial(1 << 12), 29978.648060844048236, 1e-11);
-        assert_eq!(super::ln_factorial(1 << 15), 307933.81973375485425);
-        assert_eq!(super::ln_factorial(1 << 17), 1413421.9939462073242);
+        assert_eq!(f64::ln_factorial(1 << 10), 6078.2118847500501140);
+        assert_almost_eq!(f64::ln_factorial(1 << 12), 29978.648060844048236, 1e-11);
+        assert_eq!(f64::ln_factorial(1 << 15), 307933.81973375485425);
+        assert_eq!(f64::ln_factorial(1 << 17), 1413421.9939462073242);
     }
 
     #[test]
     fn test_binomial() {
-        assert_eq!(super::binomial(1, 1), 1.0);
-        assert_eq!(super::binomial(5, 2), 10.0);
-        assert_eq!(super::binomial(7, 3), 35.0);
-        assert_eq!(super::binomial(1, 0), 1.0);
-        assert_eq!(super::binomial(0, 1), 0.0);
-        assert_eq!(super::binomial(5, 7), 0.0);
+        assert_eq!(f64::binomial(1, 1), 1.0);
+        assert_eq!(f64::binomial(5, 2), 10.0);
+        assert_eq!(f64::binomial(7, 3), 35.0);
+        assert_eq!(f64::binomial(1, 0), 1.0);
+        assert_eq!(f64::binomial(0, 1), 0.0);
+        assert_eq!(f64::binomial(5, 7), 0.0);
     }
 
     #[test]
     fn test_ln_binomial() {
-        assert_eq!(super::ln_binomial(1, 1), 1f64.ln());
-        assert_almost_eq!(super::ln_binomial(5, 2), 10f64.ln(), 1e-14);
-        assert_almost_eq!(super::ln_binomial(7, 3), 35f64.ln(), 1e-14);
-        assert_eq!(super::ln_binomial(1, 0), 1f64.ln());
-        assert_eq!(super::ln_binomial(0, 1), 0f64.ln());
-        assert_eq!(super::ln_binomial(5, 7), 0f64.ln());
+        assert_eq!(f64::ln_binomial(1, 1), 1f64.ln());
+        assert_almost_eq!(f64::ln_binomial(5, 2), 10f64.ln(), 1e-14);
+        assert_almost_eq!(f64::ln_binomial(7, 3), 35f64.ln(), 1e-14);
+        assert_eq!(f64::ln_binomial(1, 0), 1f64.ln());
+        assert_eq!(f64::ln_binomial(0, 1), 0f64.ln());
+        assert_eq!(f64::ln_binomial(5, 7), 0f64.ln());
     }
 }
