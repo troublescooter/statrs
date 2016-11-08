@@ -6,7 +6,7 @@ use statistics::*;
 use distribution::{Univariate, Continuous, Distribution};
 use result::Result;
 use error::StatsError;
-use consts;
+use consts::FloatConst;
 
 /// Implements the [Log-normal](https://en.wikipedia.org/wiki/Log-normal_distribution)
 /// distribution
@@ -207,7 +207,7 @@ impl Entropy<f64> for LogNormal {
     ///
     /// where `μ` is the location and `σ` is the scale
     fn entropy(&self) -> f64 {
-        0.5 + self.scale.ln() + self.location + consts::LN_SQRT_2PI
+        0.5 + self.scale.ln() + self.location + f64::LN_SQRT_2PI()
     }
 }
 
@@ -275,7 +275,7 @@ impl Continuous<f64, f64> for LogNormal {
     fn pdf(&self, x: f64) -> f64 {
         assert!(x > 0.0, format!("{}", StatsError::ArgMustBePositive("x")));
         let d = (x.ln() - self.location) / self.scale;
-        (-0.5 * d * d).exp() / (x * consts::SQRT_2PI * self.scale)
+        (-0.5 * d * d).exp() / (x * f64::SQRT_2PI() * self.scale)
     }
 
     /// Calculates the log probability density function for the log-normal
@@ -295,7 +295,7 @@ impl Continuous<f64, f64> for LogNormal {
     fn ln_pdf(&self, x: f64) -> f64 {
         assert!(x > 0.0, format!("{}", StatsError::ArgMustBePositive("x")));
         let d = (x.ln() - self.location) / self.scale;
-        (-0.5 * d * d) - consts::LN_SQRT_2PI - (x * self.scale).ln()
+        (-0.5 * d * d) - f64::LN_SQRT_2PI() - (x * self.scale).ln()
     }
 }
 

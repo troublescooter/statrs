@@ -2,6 +2,7 @@
 //! distribution values as constants
 
 // Trait for floating point numeric type constants
+#[allow(non_snake_case)]
 pub trait FloatConst {
     /// Constant value for `sqrt(2 * pi)`
     fn SQRT_2PI() -> Self;

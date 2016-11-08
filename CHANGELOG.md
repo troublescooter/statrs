@@ -5,7 +5,9 @@
 - All special functions in `gamma` are now generic over the floating point data types
 - `factorial` special functions are now traits implemented for the floating point data types
 - `Binomial` distribution is now generic over the floating point data types
+- `Binomial` uses `u64` instead of `i64` now
 - `Bernoulli` distribution is now generic over the floating point data types
+- `Poisson` uses `u64` instead of `i64` now
 
 ### v0.3.0
 - Moved methods `min` and `max` out of trait `Univariate` into their own respective traits `Min` and `Max`

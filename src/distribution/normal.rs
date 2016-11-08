@@ -6,7 +6,7 @@ use statistics::*;
 use distribution::{Univariate, Continuous, Distribution};
 use result::Result;
 use error::StatsError;
-use consts;
+use consts::FloatConst;
 
 /// Implements the [Normal](https://en.wikipedia.org/wiki/Normal_distribution)
 /// distribution
@@ -193,7 +193,7 @@ impl Entropy<f64> for Normal {
     ///
     /// where `σ` is the standard deviation
     fn entropy(&self) -> f64 {
-        self.std_dev.ln() + consts::LN_SQRT_2PIE
+        self.std_dev.ln() + f64::LN_SQRT_2PIE()
     }
 }
 
@@ -280,14 +280,14 @@ pub fn cdf_unchecked(x: f64, mean: f64, std_dev: f64) -> f64 {
 /// with the given mean and standard deviation at x
 pub fn pdf_unchecked(x: f64, mean: f64, std_dev: f64) -> f64 {
     let d = (x - mean) / std_dev;
-    (-0.5 * d * d).exp() / (consts::SQRT_2PI * std_dev)
+    (-0.5 * d * d).exp() / (f64::SQRT_2PI() * std_dev)
 }
 
 /// performs an unchecked log(pdf) calculation for a normal distribution
 /// with the given mean and standard deviation at x
 pub fn ln_pdf_unchecked(x: f64, mean: f64, std_dev: f64) -> f64 {
     let d = (x - mean) / std_dev;
-    (-0.5 * d * d) - consts::LN_SQRT_2PI - std_dev.ln()
+    (-0.5 * d * d) - f64::LN_SQRT_2PI() - std_dev.ln()
 }
 
 /// `sample_unchecked` draws a sample from a normal distribution using

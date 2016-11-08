@@ -1,5 +1,3 @@
-use std::f64;
-use consts;
 use error::StatsError;
 use prec;
 use Float;

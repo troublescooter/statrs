@@ -6,7 +6,7 @@ use statistics::*;
 use distribution::{Univariate, Continuous, Distribution};
 use result::Result;
 use error::StatsError;
-use consts;
+use consts::FloatConst;
 
 /// Implements the [Weibull](https://en.wikipedia.org/wiki/Weibull_distribution)
 /// distribution
@@ -242,7 +242,7 @@ impl Entropy<f64> for Weibull {
     /// where `k` is the shape, `λ` is the scale, and `γ` is
     /// the Euler-Mascheroni constant
     fn entropy(&self) -> f64 {
-        consts::EULER_MASCHERONI * (1.0 - 1.0 / self.shape) + (self.scale / self.shape).ln() + 1.0
+        f64::EULER_MASCHERONI() * (1.0 - 1.0 / self.shape) + (self.scale / self.shape).ln() + 1.0
     }
 }
 

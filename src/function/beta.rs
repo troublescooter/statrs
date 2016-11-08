@@ -1,10 +1,8 @@
 //! Provides special functions related to the [beta](https://en.wikipedia.org/wiki/Beta_function)
 //! function
 
-use std::f64;
 use error::StatsError;
 use function::gamma;
-use prec;
 use Float;
 
 /// Computes the natural logarithm

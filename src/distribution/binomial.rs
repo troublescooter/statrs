@@ -1,8 +1,7 @@
-use std::f64;
 use num;
-use rand::{Rng, Rand};
+use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
-use function::{beta, factorial};
+use function::beta;
 use statistics::*;
 use distribution::{Univariate, Discrete, Distribution};
 use result::Result;

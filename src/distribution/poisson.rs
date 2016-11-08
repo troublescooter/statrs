@@ -1,8 +1,8 @@
-use std::f64;
-use std::i64;
+use std::{f64, u64};
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
-use function::{factorial, gamma};
+use function::gamma;
+use function::factorial::Factorial;
 use statistics::*;
 use distribution::{Univariate, Discrete, Distribution};
 use result::Result;
@@ -113,7 +113,7 @@ impl Distribution<f64> for Poisson {
     }
 }
 
-impl Univariate<i64, f64> for Poisson {
+impl Univariate<u64, f64> for Poisson {
     /// Calculates the cumulative distribution function for the poisson
     /// distribution at `x`
     ///
@@ -134,7 +134,7 @@ impl Univariate<i64, f64> for Poisson {
     }
 }
 
-impl Min<i64> for Poisson {
+impl Min<u64> for Poisson {
     /// Returns the minimum value in the domain of the poisson distribution
     /// representable by a 64-bit integer
     ///
@@ -143,12 +143,12 @@ impl Min<i64> for Poisson {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> i64 {
+    fn min(&self) -> u64 {
         0
     }
 }
 
-impl Max<i64> for Poisson {
+impl Max<u64> for Poisson {
     /// Returns the maximum value in the domain of the poisson distribution
     /// representable by a 64-bit integer
     ///
@@ -157,8 +157,8 @@ impl Max<i64> for Poisson {
     /// ```ignore
     /// 2^63 - 1
     /// ```
-    fn max(&self) -> i64 {
-        i64::MAX
+    fn max(&self) -> u64 {
+        u64::MAX
     }
 }
 
@@ -252,7 +252,7 @@ impl Median<f64> for Poisson {
     }
 }
 
-impl Mode<i64> for Poisson {
+impl Mode<u64> for Poisson {
     /// Returns the mode of the poisson distribution
     ///
     /// # Formula
@@ -262,18 +262,14 @@ impl Mode<i64> for Poisson {
     /// ```
     ///
     /// where `λ` is the rate
-    fn mode(&self) -> i64 {
-        self.lambda.floor() as i64
+    fn mode(&self) -> u64 {
+        self.lambda.floor() as u64
     }
 }
 
-impl Discrete<i64, f64> for Poisson {
+impl Discrete<u64, f64> for Poisson {
     /// Calculates the probability mass function for the poisson distribution at
     /// `x`
-    ///
-    /// # Panics
-    ///
-    /// Panics if `x < 0.0`
     ///
     /// # Formula
     ///
@@ -282,17 +278,14 @@ impl Discrete<i64, f64> for Poisson {
     /// ```
     ///
     /// where `λ` is the rate
-    fn pmf(&self, x: i64) -> f64 {
-        assert!(x >= 0, format!("{}", StatsError::ArgNotNegative("x")));
-        (-self.lambda + x as f64 * self.lambda.ln() - factorial::ln_factorial(x as u64)).exp()
+    fn pmf(&self, x: u64) -> f64 {
+        (-self.lambda + x as f64 * self.lambda.ln() - f64::ln_factorial(x as usize)).exp()
     }
 
     /// Calculates the log probability mass function for the poisson distribution at
     /// `x`
     ///
     /// # Panics
-    ///
-    /// Panics if `x < 0.0`
     ///
     /// # Formula
     ///
@@ -301,9 +294,8 @@ impl Discrete<i64, f64> for Poisson {
     /// ```
     ///
     /// where `λ` is the rate
-    fn ln_pmf(&self, x: i64) -> f64 {
-        assert!(x >= 0, format!("{}", StatsError::ArgNotNegative("x")));
-        -self.lambda + x as f64 * self.lambda.ln() - factorial::ln_factorial(x as u64)
+    fn ln_pmf(&self, x: u64) -> f64 {
+        -self.lambda + x as f64 * self.lambda.ln() - f64::ln_factorial(x as usize)
     }
 }
 
@@ -340,7 +332,7 @@ fn sample_unchecked<R: Rng>(r: &mut R, lambda: f64) -> f64 {
             let y = alpha - beta * x;
             let temp = 1.0 + y.exp();
             let lhs = y + (v / (temp * temp)).ln();
-            let rhs = k + n * lambda.ln() - factorial::ln_factorial(n as u64);
+            let rhs = k + n * lambda.ln() - f64::ln_factorial(n as usize);
             if lhs <= rhs {
                 return n;
             }
