@@ -28,7 +28,7 @@ impl Factorial for f64 {
         if x > Self::max_arg() {
             f64::INFINITY
         } else {
-            get_fcache()[x]
+            get_f64_cache()[x]
         }
     }
 
@@ -38,7 +38,7 @@ impl Factorial for f64 {
         } else if x > Self::max_arg() {
             gamma::ln_gamma::<f64>(x as f64 + 1.0)
         } else {
-            get_fcache()[x].ln()
+            get_f64_cache()[x].ln()
         }
     }
 
@@ -52,7 +52,7 @@ impl Factorial for f32 {
         if x > Self::max_arg() {
             f32::INFINITY
         } else {
-            get_fcache()[x] as f32
+            get_f32_cache()[x]
         }
     }
 
@@ -62,7 +62,7 @@ impl Factorial for f32 {
         } else if x > Self::max_arg() {
             gamma::ln_gamma::<f32>(x as f32 + 1.0)
         } else {
-            get_fcache()[x].ln() as f32
+            get_f32_cache()[x].ln()
         }
     }
 
@@ -117,22 +117,44 @@ impl_binomial_for!(f32, f32::NEG_INFINITY);
 
 // Initialization for pre-computed cache of 171 factorial
 // values 0!...170! for f64
-const CACHE_SIZE: usize = 171;
+const F64_CACHE_SIZE: usize = 171;
 
-static mut FCACHE: &'static mut [f64; CACHE_SIZE] = &mut [1.0; CACHE_SIZE];
+// Initialization for pre-computed cache of 35 factorial
+// values 0!...34! for f32
+const F32_CACHE_SIZE: usize = 35;
+
+static mut F64_CACHE: &'static mut [f64; F64_CACHE_SIZE] = &mut [1.0; F64_CACHE_SIZE];
+static mut F32_CACHE: &'static mut [f32; F32_CACHE_SIZE] = &mut [1.0; F32_CACHE_SIZE];
+
 static START: Once = ONCE_INIT;
 
-fn get_fcache() -> &'static [f64; CACHE_SIZE] {
+fn get_f64_cache() -> &'static [f64; F64_CACHE_SIZE] {
     unsafe {
-        START.call_once(|| {
-            (1..CACHE_SIZE).fold(FCACHE[0], |acc, i| {
-                let fac = acc * i as f64;
-                FCACHE[i] = fac;
-                fac
-            });
-        });
-        FCACHE
+        init_caches();
+        F64_CACHE
     }
+}
+
+fn get_f32_cache() -> &'static [f32; F32_CACHE_SIZE] {
+    unsafe {
+        init_caches();
+        F32_CACHE
+    }
+}
+
+unsafe fn init_caches() {
+    START.call_once(|| {
+        (1..F64_CACHE_SIZE).fold(F64_CACHE[0], |acc, i| {
+            let fac = acc * i as f64;
+            F64_CACHE[i] = fac;
+            fac
+        });
+        (1..F32_CACHE_SIZE).fold(F32_CACHE[0], |acc, i| {
+            let fac = acc * i as f32;
+            F32_CACHE[i] = fac;
+            fac
+        });
+    });
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
