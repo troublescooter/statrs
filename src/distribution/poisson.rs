@@ -345,8 +345,7 @@ fn sample_unchecked<R: Rng>(r: &mut R, lambda: f64) -> f64 {
 mod test {
     use std::cmp::PartialEq;
     use std::fmt::Debug;
-    use std::f64;
-    use std::i64;
+    use std::{f64, u64};
     use statistics::*;
     use distribution::{Univariate, Discrete, Poisson};
 
@@ -457,9 +456,9 @@ mod test {
         test_case(1.5, 0, |x| x.min());
         test_case(5.4, 0, |x| x.min());
         test_case(10.8, 0, |x| x.min());
-        test_case(1.5, i64::MAX, |x| x.max());
-        test_case(5.4, i64::MAX, |x| x.max());
-        test_case(10.8, i64::MAX, |x| x.max());
+        test_case(1.5, u64::MAX, |x| x.max());
+        test_case(5.4, u64::MAX, |x| x.max());
+        test_case(10.8, u64::MAX, |x| x.max());
     }
 
     #[test]
@@ -476,12 +475,6 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
-    fn test_neg_pmf() {
-        get_value(1.5, |x| x.pmf(-1));
-    }
-
-    #[test]
     fn test_ln_pmf() {
         test_almost(1.5, -1.09453489189183485135413967177, 1e-15, |x| x.ln_pmf(1));
         test_almost(1.5, -12.5497614919938728510400000000, 1e-14, |x| x.ln_pmf(10));
@@ -492,12 +485,6 @@ mod test {
         test_almost(10.8, -8.42045386586982559781714423000, 1e-14, |x| x.ln_pmf(1));
         test_almost(10.8, -2.10895123177378079525424989992, 1e-14, |x| x.ln_pmf(10));
         test_almost(10.8, -5.54469377815000936289610059500, 1e-14, |x| x.ln_pmf(20));
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_neg_ln_pmf() {
-        get_value(1.5, |x| x.ln_pmf(-1));
     }
 
     #[test]

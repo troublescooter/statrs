@@ -138,22 +138,29 @@ fn get_fcache() -> &'static [f64; CACHE_SIZE] {
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[cfg(test)]
 mod test {
-    use std::{f64, u64};
+    use std::{f32, f64};
+    use super::{Binomial, Factorial};
 
     #[test]
     fn test_factorial_and_ln_factorial() {
-        let mut factorial = 1.0;
+        let mut fact64 = 1.0;
         for i in 1..171 {
-            factorial *= i as f64;
-            assert_eq!(f64::factorial(i), factorial);
-            assert_eq!(f64::ln_factorial(i), factorial.ln());
+            fact64 *= i as f64;
+            assert_eq!(f64::factorial(i), fact64);
+            assert_eq!(f64::ln_factorial(i), fact64.ln());
+        }
+        let mut fact32 = 1.0;
+        for i in 1..34 {
+            fact32 *= i as f32;
+            assert_eq!(f32::factorial(i), fact32);
+            assert_eq!(f32::ln_factorial(i), fact32.ln());
         }
     }
 
     #[test]
     fn test_factorial_overflow() {
         assert_eq!(f64::factorial(172), f64::INFINITY);
-        assert_eq!(f64::factorial(u64::MAX), f64::INFINITY);
+        assert_eq!(f32::factorial(36), f32::INFINITY);
     }
 
     #[test]

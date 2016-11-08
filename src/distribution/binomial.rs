@@ -468,7 +468,6 @@ mod test {
         bad_create_case(f64::NAN, 1);
         bad_create_case(-1.0, 1);
         bad_create_case(2.0, 1);
-        bad_create_case(0.3, -2);
     }
 
     #[test]
