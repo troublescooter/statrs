@@ -3,10 +3,10 @@ use prec;
 use Float;
 
 /// Auxiliary variable when evaluating the `gamma_ln` function
-const GAMMA_R: f32 = 10.900511;
+const GAMMA_R: f64 = 10.900511;
 
 /// Polynomial coefficients for approximating the `gamma_ln` function
-const GAMMA_DK: &'static [f32] = &[2.48574089138753565546e-5,
+const GAMMA_DK: &'static [f64] = &[2.48574089138753565546e-5,
                                    1.05142378581721974210,
                                    -3.45687097222016235469,
                                    4.51227709466894823700,
@@ -45,7 +45,8 @@ pub fn ln_gamma<T>(x: T) -> T
                   |s, t| s + t.1 / (x + t.0 - T::one()));
 
         s.ln() + T::LN_2_SQRT_E_OVER_PI() +
-        (x - T::from(0.5).unwrap()) * ((x - T::from(0.5 + GAMMA_R).unwrap()) / T::E()).ln()
+        (x - T::from(0.5).unwrap()) *
+        ((x - T::from(0.5).unwrap() + T::from(GAMMA_R).unwrap()) / T::E()).ln()
     }
 }
 
@@ -76,7 +77,8 @@ pub fn gamma<T>(x: T) -> T
                   |s, t| s + t.1 / (x + t.0 - T::one()));
 
         s * T::TWO_SQRT_E_OVER_PI() *
-        ((x - T::from(0.5 + GAMMA_R).unwrap()) / T::E()).powf(x - T::from(0.5).unwrap())
+        ((x - T::from(0.5).unwrap() + T::from(GAMMA_R).unwrap()) / T::E())
+            .powf(x - T::from(0.5).unwrap())
     }
 }
 
@@ -570,7 +572,7 @@ mod test{
         assert_almost_eq!(super::inv_digamma(1.1031566406452431872256903336679110994735070620062326), 3.5, 1e-14);
         assert_almost_eq!(super::inv_digamma(1.2561176684318004727268212432509309022911739973934097), 4.0, 1e-14);
         assert_almost_eq!(super::inv_digamma(1.3888709263595289015114046193821968137592213477205183), 4.5, 1e-14);
-        assert_almost_eq!(super::inv_digamma(1.5061176684318004727268212432509309022911739973934097), 5.0, 1e-14);
+        assert_almost_eq!(super::inv_digamma(1.5061176684318004727268212432509309022911739973934097), 5.0, 1e-13);
         assert_almost_eq!(super::inv_digamma(1.6110931485817511237336268416044190359814435699427405), 5.5, 1e-14);
         assert_almost_eq!(super::inv_digamma(2.2622143570941481235561593642219403924532310597356171), 10.1, 1e-13);
     }

@@ -96,7 +96,10 @@ impl Integer for i32 {}
 impl Integer for i64 {}
 
 /// Base trait for numeric types
-pub trait NumBase: num::NumCast + num::ToPrimitive + rand::Rand + Copy {}
+pub trait NumBase
+    : num::NumCast + num::ToPrimitive + rand::Rand + Copy + std::fmt::Display + std::fmt::Debug
+    {
+}
 
 impl NumBase for u8 {}
 impl NumBase for u16 {}
