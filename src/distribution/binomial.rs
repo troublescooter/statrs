@@ -17,7 +17,7 @@ use {Float, Unsigned};
 /// use statrs::distribution::{Binomial, Discrete};
 /// use statrs::statistics::Mean;
 ///
-/// let n = Binomial::new(0.5, 5).unwrap();
+/// let n = Binomial::new(0.5f64, 5u64).unwrap();
 /// assert_eq!(n.mean(), 2.5);
 /// assert_eq!(n.pmf(0), 0.03125);
 /// assert_eq!(n.pmf(3), 0.3125);
@@ -50,10 +50,10 @@ impl<P, N> Binomial<P, N>
     /// ```
     /// use statrs::distribution::Binomial;
     ///
-    /// let mut result = Binomial::new(0.5, 5);
+    /// let mut result = Binomial::new(0.5f64, 5u64);
     /// assert!(result.is_ok());
     ///
-    /// result = Binomial::new(-0.5, 5);
+    /// result = Binomial::new(-0.5f64, 5u64);
     /// assert!(result.is_err());
     /// ```
     pub fn new(p: P, n: N) -> Result<Binomial<P, N>> {
@@ -72,7 +72,7 @@ impl<P, N> Binomial<P, N>
     /// ```
     /// use statrs::distribution::Binomial;
     ///
-    /// let n = Binomial::new(0.5, 5).unwrap();
+    /// let n = Binomial::new(0.5f64, 5u64).unwrap();
     /// assert_eq!(n.p(), 0.5);
     /// ```
     pub fn p(&self) -> P {
@@ -87,7 +87,7 @@ impl<P, N> Binomial<P, N>
     /// ```
     /// use statrs::distribution::Binomial;
     ///
-    /// let n = Binomial::new(0.5, 5).unwrap();
+    /// let n = Binomial::new(0.5f64, 5u64).unwrap();
     /// assert_eq!(n.n(), 5);
     /// ```
     pub fn n(&self) -> N {
@@ -137,7 +137,7 @@ impl<P, N> Distribution<P> for Binomial<P, N>
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n = Binomial::new(0.5, 5).unwrap();
+    /// let n = Binomial::new(0.5f64, 5u64).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
@@ -333,7 +333,7 @@ impl<P, N> Mode<N> for Binomial<P, N>
         } else if self.p == P::one() {
             self.n
         } else {
-            N::from((P::from(self.n).unwrap() + P::one()).floor()).unwrap()
+            N::from((P::from(self.n + N::one()).unwrap() * self.p).floor()).unwrap()
         }
     }
 }

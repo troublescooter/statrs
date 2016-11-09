@@ -140,7 +140,7 @@ pub trait Discrete<T, K>: Distribution<K> {
     /// use statrs::distribution::{Discrete, Binomial};
     /// use statrs::prec;
     ///
-    /// let n = Binomial::new(0.5, 10).unwrap();
+    /// let n = Binomial::new(0.5f64, 10u64).unwrap();
     /// assert!(prec::almost_eq(n.pmf(5), 0.24609375, 1e-15));
     /// ```
     fn pmf(&self, x: T) -> K;
@@ -154,7 +154,7 @@ pub trait Discrete<T, K>: Distribution<K> {
     /// use statrs::distribution::{Discrete, Binomial};
     /// use statrs::prec;
     ///
-    /// let n = Binomial::new(0.5, 10).unwrap();
+    /// let n = Binomial::new(0.5f64, 10u64).unwrap();
     /// assert!(prec::almost_eq(n.ln_pmf(5), (0.24609375f64).ln(), 1e-15));
     /// ```
     fn ln_pmf(&self, x: T) -> K;

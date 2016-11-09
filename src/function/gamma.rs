@@ -216,7 +216,7 @@ pub fn gamma_lr<T>(a: T, x: T) -> T
         return T::one();
     }
     if prec::almost_eq(x, T::zero(), T::accuracy()) {
-        return T::one();
+        return T::zero();
     }
 
     let ax = a * x.ln() - x - ln_gamma(a);
