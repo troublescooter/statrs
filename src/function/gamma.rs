@@ -215,6 +215,7 @@ pub fn gamma_lr<T>(a: T, x: T) -> T
     if prec::almost_eq(a, T::zero(), T::accuracy()) {
         return T::one();
     }
+    println!("{:?}", x);
     if prec::almost_eq(x, T::zero(), T::accuracy()) {
         return T::zero();
     }
