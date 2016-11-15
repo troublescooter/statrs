@@ -4,7 +4,7 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.md)
 [![Crates.io](https://img.shields.io/crates/v/statrs.svg?maxAge=2592000)](https://crates.io/crates/statrs)  
 
-## Current Version: v0.3.1
+## Current Version: v0.4.0
 
 Should work for both nightly and stable Rust.
 
@@ -33,7 +33,7 @@ Add the following to your `Cargo.toml`
 
 ```Rust
 [dependencies]
-statrs = "0.3.1"
+statrs = "0.4.0"
 ```
 
 and this to your crate root
@@ -44,7 +44,7 @@ extern crate statrs;
   
 ## Examples
 
-Statrs v0.3.1 comes with a number of commonly used distributions including Normal, Gamma, Student's T, Exponential, Weibull, etc.
+Statrs v0.4.0 comes with a number of commonly used distributions including Normal, Gamma, Student's T, Exponential, Weibull, etc.
 The common use case is to set up the distributions and sample from them which depends on the `Rand` crate for random number generation
 
 ```Rust
@@ -52,7 +52,7 @@ use rand;
 use statrs::distribution::{Exponential, Distribution};
 
 let mut r = rand::StdRng::new().unwrap();
-let n = Exponential::new(0.5).unwrap();
+let n = Exponential::new(0.5f64).unwrap();
 print!("{}", n.Sample::<StdRng>(&mut r);
 ```
 
@@ -62,7 +62,7 @@ Statrs also comes with a number of useful utility traits for more detailed intro
 use statrs::distribution::{Exponential, Univariate, Continuous};
 use statrs::statistics::{Mean, Variance, Entropy, Skewness};
 
-let n = Exponential::new(1.0).unwrap();
+let n = Exponential::new(1f64).unwrap();
 assert_eq!(n.mean(), 1.0);
 assert_eq!(n.variance(), 1.0);
 assert_eq!(n.entropy(), 1.0);
