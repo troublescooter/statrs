@@ -4,7 +4,7 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.md)
 [![Crates.io](https://img.shields.io/crates/v/statrs.svg?maxAge=2592000)](https://crates.io/crates/statrs)  
 
-## Current Version: v0.3.0
+## Current Version: v0.3.1
 
 Should work for both nightly and stable Rust.
 
@@ -25,7 +25,7 @@ This library is a work-in-progress and not complete. Planned for future releases
 of distributions (Beta, Dirichlet, etc.) as well as porting over more statistical utilities (population variance,
 quantile functions on slices / iterables)
 
-Please check out the documentation [here](https://boxtown.io/docs/statrs/0.2.0/statrs/)
+Please check out the documentation [here](https://boxtown.io/docs/statrs/0.3.0/statrs/)
 
 ## Usage
 
@@ -33,7 +33,7 @@ Add the following to your `Cargo.toml`
 
 ```Rust
 [dependencies]
-statrs = "0.2.0"
+statrs = "0.3.1"
 ```
 
 and this to your crate root
@@ -44,7 +44,7 @@ extern crate statrs;
   
 ## Examples
 
-Statrs v0.2.0 comes with a number of commonly used distributions including Normal, Gamma, Student's T, Exponential, Weibull, etc.
+Statrs v0.3.1 comes with a number of commonly used distributions including Normal, Gamma, Student's T, Exponential, Weibull, etc.
 The common use case is to set up the distributions and sample from them which depends on the `Rand` crate for random number generation
 
 ```Rust
