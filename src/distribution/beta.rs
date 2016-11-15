@@ -52,7 +52,7 @@ impl<T> Beta<T>
     /// assert!(result.is_err());
     /// ```
     pub fn new(shape_a: T, shape_b: T) -> Result<Beta<T>> {
-        if valid_parameters(shape_a, shape_b) {
+        if valid_beta_parameters(shape_a, shape_b) {
             Ok(Beta {
                 shape_a: shape_a,
                 shape_b: shape_b,
@@ -88,16 +88,6 @@ impl<T> Beta<T>
     /// ```
     pub fn shape_b(&self) -> T {
         self.shape_b
-    }
-
-    fn valid_parameters(shape_a: T, shape_b: T) -> bool {
-        if shape_a.is_nan() || shape_b.is_nan() {
-            false
-        } else if shape_a <= T::zero() || shape_b <= T::zero() {
-            false
-        } else {
-            true
-        }
     }
 }
 
@@ -462,34 +452,52 @@ impl<T> Continuous<T, T> for Beta<T>
                 T::neg_infinity()
             }
         } else if self.shape_a == T::infinity() {
-            if x == 1.0 {
+            if x == T::one() {
                 T::infinity()
             } else {
                 T::neg_infinity()
             }
         } else if self.shape_b == T::infinity() {
-            if x == 0.0 {
+            if x == T::zero() {
                 T::infinity()
             } else {
                 T::neg_infinity()
             }
-        } else if self.shape_a == 1.0 && self.shape_b == 1.0 {
-            0.0
+        } else if self.shape_a == T::one() && self.shape_b == T::one() {
+            T::zero()
         } else {
             let aa = gamma::ln_gamma(self.shape_a + self.shape_b) - gamma::ln_gamma(self.shape_a) -
                      gamma::ln_gamma(self.shape_b);
-            let bb = match (self.shape_a, x) {
-                (1.0, 0.0) => 0.0,
-                (_, 0.0) => T::neg_infinity(),
-                (_, _) => (self.shape_a - 1.0) * x.ln(),
+            let bb = if self.shape_a == T::one() && x == T::zero() {
+                T::zero()
+            } else if x == T::zero() {
+                T::neg_infinity()
+            } else {
+                (self.shape_a - T::one()) * x.ln()
             };
-            let cc = match (self.shape_b, x) {
-                (1.0, 1.0) => 0.0,
-                (_, 1.0) => T::neg_infinity(),
-                (_, _) => (self.shape_b - 1.0) * (1.0 - x).ln(),
+            let cc = if self.shape_b == T::one() && x == T::one() {
+                T::zero()
+            } else if x == T::one() {
+                T::neg_infinity()
+            } else {
+                (self.shape_b - T::one()) * (T::one() - x).ln()
             };
             aa + bb + cc
         }
+    }
+}
+
+// Returns if `shape_a` and `shape_b` are valid parameters
+// for a beta distribution
+fn valid_beta_parameters<T>(shape_a: T, shape_b: T) -> bool
+    where T: Float
+{
+    if shape_a.is_nan() || shape_b.is_nan() {
+        false
+    } else if shape_a <= T::zero() || shape_b <= T::zero() {
+        false
+    } else {
+        true
     }
 }
 
