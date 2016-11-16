@@ -6,6 +6,7 @@ use statistics::*;
 use distribution::{Univariate, Continuous, Distribution};
 use result::Result;
 use error::StatsError;
+use Float;
 
 /// Implements the [Gamma](https://en.wikipedia.org/wiki/Gamma_distribution) distribution
 ///
@@ -393,34 +394,41 @@ impl Continuous<f64, f64> for Gamma {
 /// ACM Transactions on Mathematical Software, Vol. 26, No. 3, September 2000, Pages 363-372
 /// </div>
 /// <br />
-pub fn sample_unchecked<R: Rng>(r: &mut R, shape: f64, rate: f64) -> f64 {
-    if rate == f64::INFINITY {
+pub fn sample_unchecked<T, R>(r: &mut R, shape: T, rate: T) -> T
+    where T: Float,
+          R: Rng
+{
+    if rate == T::infinity() {
         return shape;
     }
 
-    let a = if shape < 1.0 { shape + 1.0 } else { shape };
-    let afix = if shape < 1.0 {
-        r.next_f64().powf(1.0 / shape)
+    let a = if shape < T::one() {
+        shape + T::one()
     } else {
-        1.0
+        shape
     };
-    let d = a - 1.0 / 3.0;
-    let c = 1.0 / (9.0 * d).sqrt();
+    let afix = if shape < T::one() {
+        r.gen::<T>().powf(T::one() / shape)
+    } else {
+        T::one()
+    };
+    let d = a - T::from(1.0 / 3.0).unwrap();
+    let c = T::one() / (T::from(9.0).unwrap() * d).sqrt();
     loop {
-        let mut x = super::normal::sample_unchecked(r, 0.0, 1.0);
-        let mut v = 1.0 + c * x;
-        while v <= 0.0 {
-            x = super::normal::sample_unchecked(r, 0.0, 1.0);
-            v = 1.0 + c * x;
+        let mut x = super::normal::sample_unchecked(r, T::zero(), T::one());
+        let mut v = T::one() + c * x;
+        while v <= T::zero() {
+            x = super::normal::sample_unchecked(r, T::zero(), T::one());
+            v = T::one() + c * x;
         }
 
-        v *= v * v;
-        x *= x;
-        let u = r.next_f64();
-        if u < 1.0 - 0.0331 * x * x {
+        v = v * v * v;
+        x = x * x;
+        let u = r.gen::<T>();
+        if u < T::one() - T::from(0.0331).unwrap() * x * x {
             return afix * d * v / rate;
         }
-        if u.ln() < 0.5 * x + d * (1.0 - v - v.ln()) {
+        if u.ln() < T::from(0.5).unwrap() * x + d * (T::one() - v - v.ln()) {
             return afix * d * v / rate;
         }
     }

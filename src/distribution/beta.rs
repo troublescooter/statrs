@@ -135,8 +135,8 @@ impl<T> Distribution<T> for Beta<T>
     /// # }
     /// ```
     fn sample<R: Rng>(&self, r: &mut R) -> T {
-        let x = super::gamma::sample_unchecked(r, self.shape_a, 1.0);
-        let y = super::gamma::sample_unchecked(r, self.shape_b, 1.0);
+        let x = super::gamma::sample_unchecked(r, self.shape_a, T::one());
+        let y = super::gamma::sample_unchecked(r, self.shape_b, T::one());
         x / (x + y)
     }
 }

@@ -7,6 +7,7 @@ use distribution::{Univariate, Continuous, Distribution};
 use result::Result;
 use error::StatsError;
 use consts::FloatConst;
+use Float;
 
 /// Implements the [Normal](https://en.wikipedia.org/wiki/Normal_distribution)
 /// distribution
@@ -292,22 +293,27 @@ pub fn ln_pdf_unchecked(x: f64, mean: f64, std_dev: f64) -> f64 {
 
 /// `sample_unchecked` draws a sample from a normal distribution using
 /// the box-muller algorithm
-pub fn sample_unchecked<R: Rng>(r: &mut R, mean: f64, std_dev: f64) -> f64 {
-    let mut tuple = polar_transform(r.next_f64(), r.next_f64());
+pub fn sample_unchecked<T, R>(r: &mut R, mean: T, std_dev: T) -> T
+    where T: Float,
+          R: Rng
+{
+    let mut tuple = polar_transform(r.gen::<T>(), r.gen::<T>());
     while !tuple.2 {
-        tuple = polar_transform(r.next_f64(), r.next_f64());
+        tuple = polar_transform(r.gen::<T>(), r.gen::<T>());
     }
     mean + std_dev * tuple.0
 }
 
-fn polar_transform(a: f64, b: f64) -> (f64, f64, bool) {
-    let v1 = 2.0 * a - 1.0;
-    let v2 = 2.0 * b - 1.0;
+fn polar_transform<T>(a: T, b: T) -> (T, T, bool)
+    where T: Float
+{
+    let v1 = T::from(2.0).unwrap() * a - T::one();
+    let v2 = T::from(2.0).unwrap() * b - T::one();
     let r = v1 * v2 + v2 * v2;
-    if r >= 1.0 || r == 0.0 {
-        (0.0, 0.0, false)
+    if r >= T::one() || r == T::zero() {
+        (T::zero(), T::zero(), false)
     } else {
-        let fac = (-2.0 * r.ln() / r).sqrt();
+        let fac = (T::from(-2.0).unwrap() * r.ln() / r).sqrt();
         (v1 * fac, v2 * fac, true)
     }
 }

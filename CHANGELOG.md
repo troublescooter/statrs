@@ -7,6 +7,7 @@
 - `Binomial` distribution is now generic over the floating point data types
 - `Binomial` uses `u64` instead of `i64` now
 - `Bernoulli` distribution is now generic over the floating point data types
+- `Beta` distribution is now generic over the floating point data types
 - `Poisson` uses `u64` instead of `i64` now
 
 ### v0.3.1
