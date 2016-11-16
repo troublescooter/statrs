@@ -507,7 +507,7 @@ mod test {
     use statistics::*;
     use distribution::{Univariate, Continuous, Beta};
 
-    fn try_create(shape_a: f64, shape_b: f64) -> Beta {
+    fn try_create(shape_a: f64, shape_b: f64) -> Beta<f64> {
         let n = Beta::new(shape_a, shape_b);
         assert!(n.is_ok());
         n.unwrap()
@@ -525,28 +525,28 @@ mod test {
     }
 
     fn get_value<F>(shape_a: f64, shape_b: f64, eval: F) -> f64
-        where F: Fn(Beta) -> f64
+        where F: Fn(Beta<f64>) -> f64
     {
         let n = try_create(shape_a, shape_b);
         eval(n)
     }
 
     fn test_case<F>(shape_a: f64, shape_b: f64, expected: f64, eval: F)
-        where F: Fn(Beta) -> f64
+        where F: Fn(Beta<f64>) -> f64
     {
         let x = get_value(shape_a, shape_b, eval);
         assert_eq!(expected, x);
     }
 
     fn test_almost<F>(shape_a: f64, shape_b: f64, expected: f64, acc: f64, eval: F)
-        where F: Fn(Beta) -> f64
+        where F: Fn(Beta<f64>) -> f64
     {
         let x = get_value(shape_a, shape_b, eval);
         assert_almost_eq!(expected, x, acc);
     }
 
     fn test_is_nan<F>(shape_a: f64, shape_b: f64, eval: F)
-        where F: Fn(Beta) -> f64
+        where F: Fn(Beta<f64>) -> f64
     {
         assert!(get_value(shape_a, shape_b, eval).is_nan())
     }

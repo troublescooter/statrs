@@ -364,7 +364,7 @@ mod test {
     use statistics::*;
     use distribution::{Univariate, Continuous, Chi};
 
-    fn try_create(freedom: f64) -> Chi {
+    fn try_create(freedom: f64) -> Chi<f64> {
         let n = Chi::new(freedom);
         assert!(n.is_ok());
         n.unwrap()
@@ -381,28 +381,28 @@ mod test {
     }
 
     fn get_value<F>(freedom: f64, eval: F) -> f64
-        where F: Fn(Chi) -> f64
+        where F: Fn(Chi<f64>) -> f64
     {
         let n = try_create(freedom);
         eval(n)
     }
 
     fn test_case<F>(freedom: f64, expected: f64, eval: F)
-        where F: Fn(Chi) -> f64
+        where F: Fn(Chi<f64>) -> f64
     {
         let x = get_value(freedom, eval);
         assert_eq!(expected, x);
     }
 
     fn test_almost<F>(freedom: f64, expected: f64, acc: f64, eval: F)
-        where F: Fn(Chi) -> f64
+        where F: Fn(Chi<f64>) -> f64
     {
         let x = get_value(freedom, eval);
         assert_almost_eq!(expected, x, acc);
     }
 
     fn test_is_nan<F>(freedom: f64, eval: F)
-        where F : Fn(Chi) -> f64
+        where F : Fn(Chi<f64>) -> f64
     {
         let x = get_value(freedom, eval);
         assert!(x.is_nan());
