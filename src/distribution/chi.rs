@@ -1,4 +1,4 @@
-use std::f64;
+use num;
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
 use function::gamma;
@@ -6,6 +6,7 @@ use statistics::*;
 use distribution::{Univariate, Continuous, Distribution};
 use result::Result;
 use error::StatsError;
+use Float;
 
 /// Implements the [Chi](https://en.wikipedia.org/wiki/Chi_distribution)
 /// distribution
@@ -22,11 +23,15 @@ use error::StatsError;
 /// assert!(prec::almost_eq(n.pdf(1.0), 0.60653065971263342360, 1e-15));
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Chi {
-    freedom: f64,
+pub struct Chi<T>
+    where T: Float
+{
+    freedom: T,
 }
 
-impl Chi {
+impl<T> Chi<T>
+    where T: Float
+{
     /// Constructs a new chi distribution
     /// with `freedom` degrees of freedom
     ///
@@ -40,14 +45,14 @@ impl Chi {
     /// ```
     /// use statrs::distribution::Chi;
     ///
-    /// let mut result = Chi::new(2.0);
+    /// let mut result = Chi::new(2f64);
     /// assert!(result.is_ok());
     ///
-    /// result = Chi::new(0.0);
+    /// result = Chi::new(0f64);
     /// assert!(result.is_err());
     /// ```
-    pub fn new(freedom: f64) -> Result<Chi> {
-        if freedom.is_nan() || freedom <= 0.0 {
+    pub fn new(freedom: T) -> Result<Chi<T>> {
+        if freedom.is_nan() || freedom <= T::zero() {
             Err(StatsError::BadParams)
         } else {
             Ok(Chi { freedom: freedom })
@@ -62,33 +67,39 @@ impl Chi {
     /// ```
     /// use statrs::distribution::Chi;
     ///
-    /// let n = Chi::new(2.0).unwrap();
+    /// let n = Chi::new(2f64).unwrap();
     /// assert_eq!(n.freedom(), 2.0);
     /// ```
-    pub fn freedom(&self) -> f64 {
+    pub fn freedom(&self) -> T {
         self.freedom
     }
 }
 
-impl Sample<f64> for Chi {
+impl<T> Sample<T> for Chi<T>
+    where T: Float
+{
     /// Generate a random sample from a chi
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn sample<R: Rng>(&mut self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&mut self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl IndependentSample<f64> for Chi {
+impl<T> IndependentSample<T> for Chi<T>
+    where T: Float
+{
     /// Generate a random independent sample from a chi
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn ind_sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn ind_sample<R: Rng>(&self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl Distribution<f64> for Chi {
+impl<T> Distribution<T> for Chi<T>
+    where T: Float
+{
     /// Generate a random sample from the chi distribution
     /// using `r` as the source of randomness
     ///
@@ -102,19 +113,23 @@ impl Distribution<f64> for Chi {
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n = Chi::new(2.0).unwrap();
+    /// let n = Chi::new(2f64).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
-    fn sample<R: Rng>(&self, r: &mut R) -> f64 {
-        (0..self.freedom as i64)
-            .fold(0.0,
-                  |acc, _| acc + super::normal::sample_unchecked(r, 0.0, 1.0).powf(2.0))
+    fn sample<R: Rng>(&self, r: &mut R) -> T {
+        num::range(T::zero(), self.freedom)
+            .fold(T::zero(), |acc, _| {
+                acc +
+                super::normal::sample_unchecked(r, T::zero(), T::one()).powf(T::from(2.0).unwrap())
+            })
             .sqrt()
     }
 }
 
-impl Univariate<f64, f64> for Chi {
+impl<T> Univariate<T, T> for Chi<T>
+    where T: Float
+{
     /// Calculates the cumulative distribution function for the chi
     /// distribution at `x`.
     ///
@@ -130,17 +145,21 @@ impl Univariate<f64, f64> for Chi {
     ///
     /// where `k` is the degrees of freedom and `P` is
     /// the regularized Gamma function
-    fn cdf(&self, x: f64) -> f64 {
-        assert!(x >= 0.0, format!("{}", StatsError::ArgNotNegative("x")));
-        if self.freedom == f64::INFINITY || x == f64::INFINITY {
-            1.0
+    fn cdf(&self, x: T) -> T {
+        assert!(x >= T::zero(),
+                format!("{}", StatsError::ArgNotNegative("x")));
+        if self.freedom == T::infinity() || x == T::infinity() {
+            T::one()
         } else {
-            gamma::gamma_lr(self.freedom / 2.0, x * x / 2.0)
+            gamma::gamma_lr(self.freedom / T::from(2.0).unwrap(),
+                            x * x / T::from(2.0).unwrap())
         }
     }
 }
 
-impl Min<f64> for Chi {
+impl<T> Min<T> for Chi<T>
+    where T: Float
+{
     /// Returns the minimum value in the domain of the chi distribution
     /// representable by a double precision float
     ///
@@ -149,12 +168,14 @@ impl Min<f64> for Chi {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> f64 {
-        0.0
+    fn min(&self) -> T {
+        T::zero()
     }
 }
 
-impl Max<f64> for Chi {
+impl<T> Max<T> for Chi<T>
+    where T: Float
+{
     /// Returns the maximum value in the domain of the chi distribution
     /// representable by a double precision float
     ///
@@ -163,12 +184,14 @@ impl Max<f64> for Chi {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> f64 {
-        f64::INFINITY
+    fn max(&self) -> T {
+        T::infinity()
     }
 }
 
-impl Mean<f64> for Chi {
+impl<T> Mean<T> for Chi<T>
+    where T: Float
+{
     /// Returns the mean of the chi distribution
     ///
     /// # Formula
@@ -178,13 +201,15 @@ impl Mean<f64> for Chi {
     /// ```
     ///
     /// where `k` is degrees of freedom and `Γ` is the gamma function
-    fn mean(&self) -> f64 {
-        f64::consts::SQRT_2 * gamma::gamma((self.freedom + 1.0) / 2.0) /
-        gamma::gamma(self.freedom / 2.0)
+    fn mean(&self) -> T {
+        T::SQRT_2() * gamma::gamma((self.freedom + T::one()) / T::from(2.0).unwrap()) /
+        gamma::gamma(self.freedom / T::from(2.0).unwrap())
     }
 }
 
-impl Variance<f64> for Chi {
+impl<T> Variance<T> for Chi<T>
+    where T: Float
+{
     /// Returns the variance of the chi distribution
     ///
     /// # Formula
@@ -195,7 +220,7 @@ impl Variance<f64> for Chi {
     ///
     /// where `k` is degrees of freedom and `μ` is the mean
     /// of the distribution
-    fn variance(&self) -> f64 {
+    fn variance(&self) -> T {
         self.freedom - self.mean() * self.mean()
     }
 
@@ -209,12 +234,14 @@ impl Variance<f64> for Chi {
     ///
     /// where `k` is degrees of freedom and `μ` is the mean
     /// of the distribution
-    fn std_dev(&self) -> f64 {
+    fn std_dev(&self) -> T {
         self.variance().sqrt()
     }
 }
 
-impl Entropy<f64> for Chi {
+impl<T> Entropy<T> for Chi<T>
+    where T: Float
+{
     /// Returns the entropy of the chi distribution
     ///
     /// # Formula
@@ -225,14 +252,17 @@ impl Entropy<f64> for Chi {
     ///
     /// where `k` is degrees of freedom, `Γ` is the gamma function,
     /// and `ψ` is the digamma function
-    fn entropy(&self) -> f64 {
-        gamma::ln_gamma(self.freedom / 2.0) +
-        (self.freedom - (2.0f64).ln() - (self.freedom - 1.0) * gamma::digamma(self.freedom / 2.0)) /
-        2.0
+    fn entropy(&self) -> T {
+        gamma::ln_gamma(self.freedom / T::from(2.0).unwrap()) +
+        (self.freedom - T::from(2.0).unwrap().ln() -
+         (self.freedom - T::one()) * gamma::digamma(self.freedom / T::from(2.0).unwrap())) /
+        T::from(2.0).unwrap()
     }
 }
 
-impl Skewness<f64> for Chi {
+impl<T> Skewness<T> for Chi<T>
+    where T: Float
+{
     /// Returns the skewness of the chi distribution
     ///
     /// # Formula
@@ -242,13 +272,15 @@ impl Skewness<f64> for Chi {
     /// ```
     /// where `μ` is the mean and `σ` the standard deviation
     /// of the distribution
-    fn skewness(&self) -> f64 {
+    fn skewness(&self) -> T {
         let sigma = self.std_dev();
-        self.mean() * (1.0 - 2.0 * sigma * sigma) / (sigma * sigma * sigma)
+        self.mean() * (T::one() - T::from(2.0).unwrap() * sigma * sigma) / (sigma * sigma * sigma)
     }
 }
 
-impl Mode<f64> for Chi {
+impl<T> Mode<T> for Chi<T>
+    where T: Float
+{
     /// Returns the mode for the chi distribution
     ///
     /// # Panics
@@ -262,14 +294,16 @@ impl Mode<f64> for Chi {
     /// ```
     ///
     /// where `k` is the degrees of freedom
-    fn mode(&self) -> f64 {
-        assert!(self.freedom >= 1.0,
+    fn mode(&self) -> T {
+        assert!(self.freedom >= T::one(),
                 format!("{}", StatsError::ArgGte("freedom", 1.0)));
-        (self.freedom - 1.0).sqrt()
+        (self.freedom - T::one()).sqrt()
     }
 }
 
-impl Continuous<f64, f64> for Chi {
+impl<T> Continuous<T, T> for Chi<T>
+    where T: Float
+{
     /// Calculates the probability density function for the chi
     /// distribution at `x`
     ///
@@ -284,15 +318,17 @@ impl Continuous<f64, f64> for Chi {
     /// ```
     ///
     /// where `k` is the degrees of freedom and `Γ` is the gamma function
-    fn pdf(&self, x: f64) -> f64 {
-        assert!(x >= 0.0, format!("{}", StatsError::ArgNotNegative("x")));
-        if self.freedom == f64::INFINITY || x == f64::INFINITY || x == 0.0 {
-            0.0
-        } else if self.freedom > 160.0 {
+    fn pdf(&self, x: T) -> T {
+        assert!(x >= T::zero(),
+                format!("{}", StatsError::ArgNotNegative("x")));
+        if self.freedom == T::infinity() || x == T::infinity() || x == T::zero() {
+            T::zero()
+        } else if self.freedom > T::from(160.0).unwrap() {
             self.ln_pdf(x)
         } else {
-            (2.0f64).powf(1.0 - self.freedom / 2.0) * x.powf(self.freedom - 1.0) *
-            (-x * x / 2.0).exp() / gamma::gamma(self.freedom / 2.0)
+            let two = T::from(2.0).unwrap();
+            two.powf(T::one() - self.freedom / two) * x.powf(self.freedom - T::one()) *
+            (-x * x / two).exp() / gamma::gamma(self.freedom / two)
         }
     }
 
@@ -308,13 +344,15 @@ impl Continuous<f64, f64> for Chi {
     /// ```ignore
     /// ln((2^(1 - (k / 2)) * x^(k - 1) * e^(-x^2 / 2)) / Γ(k / 2))
     /// ```
-    fn ln_pdf(&self, x: f64) -> f64 {
-        assert!(x >= 0.0, format!("{}", StatsError::ArgNotNegative("x")));
-        if self.freedom == f64::INFINITY || x == f64::INFINITY || x == 0.0 {
-            f64::NEG_INFINITY
+    fn ln_pdf(&self, x: T) -> T {
+        assert!(x >= T::zero(),
+                format!("{}", StatsError::ArgNotNegative("x")));
+        if self.freedom == T::infinity() || x == T::infinity() || x == T::zero() {
+            T::neg_infinity()
         } else {
-            (1.0 - self.freedom / 2.0) * (2.0f64).ln() + ((self.freedom - 1.0) * x.ln()) -
-            x * x / 2.0 - gamma::ln_gamma(self.freedom / 2.0)
+            let two = T::from(2.0).unwrap();
+            (T::one() - self.freedom / two) * two.ln() + (self.freedom - T::one()) * x.ln() -
+            x * x / two - gamma::ln_gamma(self.freedom / two)
         }
     }
 }

@@ -1,4 +1,3 @@
-use std::f64;
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
 use function::{beta, gamma};
@@ -52,13 +51,13 @@ impl<T> Beta<T>
     /// assert!(result.is_err());
     /// ```
     pub fn new(shape_a: T, shape_b: T) -> Result<Beta<T>> {
-        if valid_beta_parameters(shape_a, shape_b) {
+        if !valid_beta_parameters(shape_a, shape_b) {
+            Err(StatsError::BadParams)
+        } else {
             Ok(Beta {
                 shape_a: shape_a,
                 shape_b: shape_b,
             })
-        } else {
-            Err(StatsError::BadParams)
         }
     }
 
