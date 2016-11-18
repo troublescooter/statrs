@@ -410,7 +410,7 @@ impl<T> Continuous<T, T> for Beta<T>
                 T::zero()
             }
         } else if self.shape_b == T::infinity() {
-            if x == T::one() {
+            if x == T::zero() {
                 T::infinity()
             } else {
                 T::zero()
