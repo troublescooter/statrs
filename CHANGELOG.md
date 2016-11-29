@@ -4,8 +4,9 @@
 - All special functions in `beta` are now generic over the floating point data types
 - All special functions in `gamma` are now generic over the floating point data types
 - `factorial` special functions are now traits implemented for the floating point data types
-- `Binomial` distribution is now generic over the floating point and unsigned integer data types
-- `Bernoulli` distribution is now generic over the floating point data types (uses `1u32` as `n`)
+- `Binomial` distribution is now generic over the floating point data types
+- `Binomial` uses `u64` instead of `i64` now
+- `Bernoulli` distribution is now generic over the floating point data types
 - `Beta` distribution is now generic over the floating point data types
 - `Chi` distribution is now generic over the floating point data types
 - `Poisson` uses `u64` instead of `i64` now

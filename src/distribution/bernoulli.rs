@@ -3,7 +3,7 @@ use rand::distributions::{Sample, IndependentSample};
 use statistics::*;
 use distribution::{Univariate, Discrete, Distribution, Binomial};
 use result::Result;
-use Float;
+use {Float, Unsigned};
 
 /// Implements the [Bernoulli](https://en.wikipedia.org/wiki/Bernoulli_distribution)
 /// distribution which is a special case of the [Binomial](https://en.wikipedia.org/wiki/Binomial_distribution)
@@ -15,21 +15,23 @@ use Float;
 /// use statrs::distribution::{Bernoulli, Discrete};
 /// use statrs::statistics::Mean;
 ///
-/// let n = Bernoulli::new(0.5f64).unwrap();
+/// let n: Bernoulli<f64, u64> = Bernoulli::new(0.5).unwrap();
 /// assert_eq!(n.mean(), 0.5);
 /// assert_eq!(n.pmf(0), 0.5);
 /// assert_eq!(n.pmf(1), 0.5);
 /// assert_eq!(n.pmf(2), 0.0);
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Bernoulli<P>
-    where P: Float
+pub struct Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
-    b: Binomial<P, u32>,
+    b: Binomial<P, N>,
 }
 
-impl<P> Bernoulli<P>
-    where P: Float
+impl<P, N> Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Constructs a new bernoulli distribution with
     /// the given `p` probability of success.
@@ -45,14 +47,14 @@ impl<P> Bernoulli<P>
     /// use statrs::distribution::Bernoulli;
     /// use statrs::Result;
     ///
-    /// let mut result = Bernoulli::new(0.5f64);
+    /// let mut result: Result<Bernoulli<f64, u64>> = Bernoulli::new(0.5);
     /// assert!(result.is_ok());
     ///
-    /// result = Bernoulli::new(-0.5f64);
+    /// result = Bernoulli::new(-0.5);
     /// assert!(result.is_err());
     /// ```
-    pub fn new(p: P) -> Result<Bernoulli<P>> {
-        Binomial::new(p, 1u32).map(|b| Bernoulli { b: b })
+    pub fn new(p: P) -> Result<Bernoulli<P, N>> {
+        Binomial::new(p, N::one()).map(|b| Bernoulli { b: b })
     }
 
     /// Returns the probability of success `p` of the
@@ -63,7 +65,7 @@ impl<P> Bernoulli<P>
     /// ```
     /// use statrs::distribution::Bernoulli;
     ///
-    /// let n = Bernoulli::new(0.5f64).unwrap();
+    /// let n: Bernoulli<f64, u64> = Bernoulli::new(0.5).unwrap();
     /// assert_eq!(n.p(), 0.5);
     /// ```
     pub fn p(&self) -> P {
@@ -78,16 +80,17 @@ impl<P> Bernoulli<P>
     /// ```
     /// use statrs::distribution::Bernoulli;
     ///
-    /// let n = Bernoulli::new(0.5f64).unwrap();
+    /// let n: Bernoulli<f64, u64> = Bernoulli::new(0.5).unwrap();
     /// assert_eq!(n.n(), 1);
     /// ```
-    pub fn n(&self) -> u32 {
-        1u32
+    pub fn n(&self) -> N {
+        N::one()
     }
 }
 
-impl<P> Sample<P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Sample<P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Generate a random sample from a bernoulli
     /// distribution using `r` as the source of randomness.
@@ -97,8 +100,9 @@ impl<P> Sample<P> for Bernoulli<P>
     }
 }
 
-impl<P> IndependentSample<P> for Bernoulli<P>
-    where P: Float
+impl<P, N> IndependentSample<P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Generate a random independent sample from a bernoulli
     /// distribution using `r` as the source of randomness.
@@ -108,8 +112,9 @@ impl<P> IndependentSample<P> for Bernoulli<P>
     }
 }
 
-impl<P> Distribution<P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Distribution<P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Generate a random sample from the
     /// bernoulli distribution using `r` as the source
@@ -127,7 +132,7 @@ impl<P> Distribution<P> for Bernoulli<P>
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n = Bernoulli::new(0.5f64).unwrap();
+    /// let n: Bernoulli<f64, u64> = Bernoulli::new(0.5).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
@@ -136,8 +141,9 @@ impl<P> Distribution<P> for Bernoulli<P>
     }
 }
 
-impl<P> Univariate<u32, P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Univariate<N, P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Calculates the cumulative distribution
     /// function for the bernoulli distribution at `x`.
@@ -158,42 +164,45 @@ impl<P> Univariate<u32, P> for Bernoulli<P>
     }
 }
 
-impl<P> Min<u32> for Bernoulli<P>
-    where P: Float
+impl<P, N> Min<N> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Returns the minimum value in the domain of the
-    /// bernoulli distribution representable by a 32-
-    /// bit unsigned integer
+    /// bernoulli distribution representable by a 64-
+    /// bit integer
     ///
     /// # Formula
     ///
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> u32 {
-        0u32
+    fn min(&self) -> N {
+        N::zero()
     }
 }
 
-impl<P> Max<u32> for Bernoulli<P>
-    where P: Float
+impl<P, N> Max<N> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Returns the maximum value in the domain of the
-    /// bernoulli distribution representable by a 32-
-    /// bit unsigned integer
+    /// bernoulli distribution representable by a 64-
+    /// bit integer
     ///
     /// # Formula
     ///
     /// ```ignore
     /// 1
     /// ```
-    fn max(&self) -> u32 {
-        1u32
+    fn max(&self) -> N {
+        N::one()
     }
 }
 
-impl<P> Mean<P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Mean<P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Returns the mean of the bernoulli
     /// distribution
@@ -208,8 +217,9 @@ impl<P> Mean<P> for Bernoulli<P>
     }
 }
 
-impl<P> Variance<P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Variance<P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Returns the variance of the bernoulli
     /// distribution
@@ -236,8 +246,9 @@ impl<P> Variance<P> for Bernoulli<P>
     }
 }
 
-impl<P> Entropy<P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Entropy<P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Returns the entropy of the bernoulli
     /// distribution
@@ -253,8 +264,9 @@ impl<P> Entropy<P> for Bernoulli<P>
     }
 }
 
-impl<P> Skewness<P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Skewness<P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Returns the skewness of the bernoulli
     /// distribution
@@ -270,8 +282,9 @@ impl<P> Skewness<P> for Bernoulli<P>
     }
 }
 
-impl<P> Median<P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Median<P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Returns the median of the bernoulli
     /// distribution
@@ -288,8 +301,9 @@ impl<P> Median<P> for Bernoulli<P>
     }
 }
 
-impl<P> Mode<u32> for Bernoulli<P>
-    where P: Float
+impl<P, N> Mode<N> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Returns the mode of the bernoulli distribution
     ///
@@ -299,13 +313,14 @@ impl<P> Mode<u32> for Bernoulli<P>
     /// if p < 0.5 { 0 }
     /// else { 1 }
     /// ```
-    fn mode(&self) -> u32 {
+    fn mode(&self) -> N {
         self.b.mode()
     }
 }
 
-impl<P> Discrete<u32, P> for Bernoulli<P>
-    where P: Float
+impl<P, N> Discrete<N, P> for Bernoulli<P, N>
+    where P: Float,
+          N: Unsigned
 {
     /// Calculates the probability mass function for the
     /// bernoulli distribution at `x`.
@@ -321,7 +336,7 @@ impl<P> Discrete<u32, P> for Bernoulli<P>
     /// else if x == 0 { 1 - p }
     /// else { p }
     /// ```
-    fn pmf(&self, x: u32) -> P {
+    fn pmf(&self, x: N) -> P {
         self.b.pmf(x)
     }
 
@@ -339,7 +354,7 @@ impl<P> Discrete<u32, P> for Bernoulli<P>
     /// else if x == 0 { ln(1 - p) }
     /// else { ln(p) }
     /// ```
-    fn ln_pmf(&self, x: u32) -> P {
+    fn ln_pmf(&self, x: N) -> P {
         self.b.ln_pmf(x)
     }
 }
