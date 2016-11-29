@@ -1,4 +1,3 @@
-use std::f64;
 use std::marker::PhantomData;
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
@@ -17,7 +16,7 @@ use {Float, Signed};
 /// use statrs::distribution::{DiscreteUniform, Discrete};
 /// use statrs::statistics::Mean;
 ///
-/// let n = DiscreteUniform::new(0i64, 5).unwrap();
+/// let n = DiscreteUniform::<f64, i64>::new(0, 5).unwrap();
 /// assert_eq!(n.mean(), 2.5);
 /// assert_eq!(n.pmf(3), 1.0 / 6.0);
 /// ```
@@ -47,10 +46,10 @@ impl<T, K> DiscreteUniform<T, K>
     /// ```
     /// use statrs::distribution::DiscreteUniform;
     ///
-    /// let mut result = DiscreteUniform::new(0i64, 5);
+    /// let mut result = DiscreteUniform::<f64, i64>::new(0, 5);
     /// assert!(result.is_ok());
     ///
-    /// result = DiscreteUniform::new(5i64, 0);
+    /// result = DiscreteUniform::new(5, 0);
     /// assert!(result.is_err());
     /// ```
     pub fn new(min: K, max: K) -> Result<DiscreteUniform<T, K>> {
@@ -107,7 +106,7 @@ impl<T, K> Distribution<T> for DiscreteUniform<T, K>
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n = DiscreteUniform::new(0i64, 5).unwrap();
+    /// let n = DiscreteUniform::<f64, i64>::new(0, 5).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
@@ -342,10 +341,11 @@ mod test {
     use std::cmp::PartialEq;
     use std::fmt::Debug;
     use std::f64;
+    use result::Result;
     use statistics::*;
     use distribution::{Univariate, Discrete, DiscreteUniform};
 
-    fn try_create(min: i64, max: i64) -> DiscreteUniform {
+    fn try_create(min: i64, max: i64) -> DiscreteUniform<f64, i64> {
         let n = DiscreteUniform::new(min, max);
         assert!(n.is_ok());
         n.unwrap()
@@ -358,13 +358,13 @@ mod test {
     }
 
     fn bad_create_case(min: i64, max: i64) {
-        let n = DiscreteUniform::new(min, max);
+        let n: Result<DiscreteUniform<f64, i64>> = DiscreteUniform::new(min, max);
         assert!(n.is_err());
     }
 
     fn test_case<T, F>(min: i64, max: i64, expected: T, eval: F)
         where T: PartialEq + Debug,
-              F: Fn(DiscreteUniform) -> T
+              F: Fn(DiscreteUniform<f64, i64>) -> T
     {
         let n = try_create(min, max);
         let x = eval(n);
