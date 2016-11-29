@@ -15,7 +15,7 @@ use {Float, Unsigned};
 /// use statrs::distribution::{Bernoulli, Discrete};
 /// use statrs::statistics::Mean;
 ///
-/// let n: Bernoulli<f64, u64> = Bernoulli::new(0.5).unwrap();
+/// let n = Bernoulli::<f64, u64>::new(0.5).unwrap();
 /// assert_eq!(n.mean(), 0.5);
 /// assert_eq!(n.pmf(0), 0.5);
 /// assert_eq!(n.pmf(1), 0.5);
@@ -47,7 +47,7 @@ impl<P, N> Bernoulli<P, N>
     /// use statrs::distribution::Bernoulli;
     /// use statrs::Result;
     ///
-    /// let mut result: Result<Bernoulli<f64, u64>> = Bernoulli::new(0.5);
+    /// let mut result = Bernoulli::<f64, u64>::new(0.5);
     /// assert!(result.is_ok());
     ///
     /// result = Bernoulli::new(-0.5);
@@ -65,7 +65,7 @@ impl<P, N> Bernoulli<P, N>
     /// ```
     /// use statrs::distribution::Bernoulli;
     ///
-    /// let n: Bernoulli<f64, u64> = Bernoulli::new(0.5).unwrap();
+    /// let n = Bernoulli::<f64, u64>::new(0.5).unwrap();
     /// assert_eq!(n.p(), 0.5);
     /// ```
     pub fn p(&self) -> P {
@@ -80,7 +80,7 @@ impl<P, N> Bernoulli<P, N>
     /// ```
     /// use statrs::distribution::Bernoulli;
     ///
-    /// let n: Bernoulli<f64, u64> = Bernoulli::new(0.5).unwrap();
+    /// let n = Bernoulli::<f64, u64>::new(0.5).unwrap();
     /// assert_eq!(n.n(), 1);
     /// ```
     pub fn n(&self) -> N {
@@ -132,7 +132,7 @@ impl<P, N> Distribution<P> for Bernoulli<P, N>
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n: Bernoulli<f64, u64> = Bernoulli::new(0.5).unwrap();
+    /// let n = Bernoulli::<f64, u64>::new(0.5).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
