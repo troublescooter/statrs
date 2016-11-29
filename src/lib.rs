@@ -84,7 +84,9 @@ impl Unsigned for u64 {}
 
 /// Integer is a wrapper trait for generic integer types used
 /// by statrs
-pub trait Integer: num::Integer + NumBase {}
+pub trait Integer
+    : num::Integer + rand::distributions::range::SampleRange + NumBase {
+}
 
 impl Integer for u8 {}
 impl Integer for u16 {}

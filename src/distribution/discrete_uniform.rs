@@ -1,10 +1,12 @@
 use std::f64;
+use std::marker::PhantomData;
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
 use statistics::*;
 use distribution::{Univariate, Discrete, Distribution};
 use result::Result;
 use error::StatsError;
+use {Float, Signed};
 
 /// Implements the [Discrete Uniform](https://en.wikipedia.org/wiki/Discrete_uniform_distribution)
 /// distribution
@@ -15,17 +17,24 @@ use error::StatsError;
 /// use statrs::distribution::{DiscreteUniform, Discrete};
 /// use statrs::statistics::Mean;
 ///
-/// let n = DiscreteUniform::new(0, 5).unwrap();
+/// let n = DiscreteUniform::new(0i64, 5).unwrap();
 /// assert_eq!(n.mean(), 2.5);
 /// assert_eq!(n.pmf(3), 1.0 / 6.0);
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct DiscreteUniform {
-    min: i64,
-    max: i64,
+pub struct DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
+    phantom: PhantomData<T>,
+    min: K,
+    max: K,
 }
 
-impl DiscreteUniform {
+impl<T, K> DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Constructs a new discrete uniform distribution with a minimum value
     /// of `min` and a maximum value of `max`.
     ///
@@ -38,17 +47,18 @@ impl DiscreteUniform {
     /// ```
     /// use statrs::distribution::DiscreteUniform;
     ///
-    /// let mut result = DiscreteUniform::new(0, 5);
+    /// let mut result = DiscreteUniform::new(0i64, 5);
     /// assert!(result.is_ok());
     ///
-    /// result = DiscreteUniform::new(5, 0);
+    /// result = DiscreteUniform::new(5i64, 0);
     /// assert!(result.is_err());
     /// ```
-    pub fn new(min: i64, max: i64) -> Result<DiscreteUniform> {
+    pub fn new(min: K, max: K) -> Result<DiscreteUniform<T, K>> {
         if max < min {
             Err(StatsError::BadParams)
         } else {
             Ok(DiscreteUniform {
+                phantom: PhantomData,
                 min: min,
                 max: max,
             })
@@ -56,25 +66,34 @@ impl DiscreteUniform {
     }
 }
 
-impl Sample<f64> for DiscreteUniform {
+impl<T, K> Sample<T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Generate a random sample from a discrete uniform
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn sample<R: Rng>(&mut self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&mut self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl IndependentSample<f64> for DiscreteUniform {
+impl<T, K> IndependentSample<T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Generate a random independent sample from a discrete uniform
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn ind_sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn ind_sample<R: Rng>(&self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl Distribution<f64> for DiscreteUniform {
+impl<T, K> Distribution<T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Generate a random sample from the discrete uniform distribution
     /// using `r` as the source of randomness in the range `[min, max]`
     ///
@@ -88,16 +107,19 @@ impl Distribution<f64> for DiscreteUniform {
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n = DiscreteUniform::new(0, 5).unwrap();
+    /// let n = DiscreteUniform::new(0i64, 5).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
-    fn sample<R: Rng>(&self, r: &mut R) -> f64 {
-        r.gen_range(self.min, self.max + 1) as f64
+    fn sample<R: Rng>(&self, r: &mut R) -> T {
+        T::from(r.gen_range(self.min, self.max + K::one())).unwrap()
     }
 }
 
-impl Univariate<i64, f64> for DiscreteUniform {
+impl<T, K> Univariate<K, T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Calculates the cumulative distribution function for the
     /// discrete uniform distribution at `x`
     ///
@@ -110,46 +132,55 @@ impl Univariate<i64, f64> for DiscreteUniform {
     /// ```ignore
     /// (floor(x) - min + 1) / (max - min + 1)
     /// ```
-    fn cdf(&self, x: f64) -> f64 {
-        if x < self.min as f64 {
-            return 0.0;
+    fn cdf(&self, x: T) -> T {
+        if x < T::from(self.min).unwrap() {
+            return T::zero();
         }
-        if x >= self.max as f64 {
-            return 1.0;
+        if x >= T::from(self.max).unwrap() {
+            return T::one();
         }
 
-        let lower = self.min as f64;
-        let upper = self.max as f64;
-        let ans = (x.floor() - lower + 1.0) / (upper - lower + 1.0);
-        if ans > 1.0 { 1.0 } else { ans }
+        let lower = T::from(self.min).unwrap();
+        let upper = T::from(self.max).unwrap();
+        let ans = (x.floor() - lower + T::one()) / (upper - lower + T::one());
+        if ans > T::one() { T::one() } else { ans }
     }
 }
 
-impl Min<i64> for DiscreteUniform {
+impl<T, K> Min<K> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Returns the minimum value in the domain of the discrete uniform
     /// distribution
     ///
     /// # Remarks
     ///
     /// This is the same value as the minimum passed into the constructor
-    fn min(&self) -> i64 {
+    fn min(&self) -> K {
         self.min
     }
 }
 
-impl Max<i64> for DiscreteUniform {
+impl<T, K> Max<K> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Returns the maximum value in the domain of the discrete uniform
     /// distribution
     ///
     /// # Remarks
     ///
     /// This is the same value as the maximum passed into the constructor
-    fn max(&self) -> i64 {
+    fn max(&self) -> K {
         self.max
     }
 }
 
-impl Mean<f64> for DiscreteUniform {
+impl<T, K> Mean<T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Returns the mean of the discrete uniform distribution
     ///
     /// # Formula
@@ -157,12 +188,15 @@ impl Mean<f64> for DiscreteUniform {
     /// ```ignore
     /// (min + max) / 2
     /// ```
-    fn mean(&self) -> f64 {
-        (self.min + self.max) as f64 / 2.0
+    fn mean(&self) -> T {
+        T::from(self.min + self.max).unwrap() / T::from(2.0).unwrap()
     }
 }
 
-impl Variance<f64> for DiscreteUniform {
+impl<T, K> Variance<T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Returns the variance of the discrete uniform distribution
     ///
     /// # Formula
@@ -170,9 +204,9 @@ impl Variance<f64> for DiscreteUniform {
     /// ```ignore
     /// ((max - min + 1)^2 - 1) / 12
     /// ```
-    fn variance(&self) -> f64 {
-        let diff = (self.max - self.min) as f64;
-        ((diff + 1.0) * (diff + 1.0) - 1.0) / 12.0
+    fn variance(&self) -> T {
+        let diff = T::from(self.max - self.min).unwrap();
+        ((diff + T::one()) * (diff + T::one()) - T::one()) / T::from(12.0).unwrap()
     }
 
     /// Returns the standard deviation of the discrete uniform distribution
@@ -182,12 +216,15 @@ impl Variance<f64> for DiscreteUniform {
     /// ```ignore
     /// sqrt(((max - min + 1)^2 - 1) / 12)
     /// ```
-    fn std_dev(&self) -> f64 {
+    fn std_dev(&self) -> T {
         self.variance().sqrt()
     }
 }
 
-impl Entropy<f64> for DiscreteUniform {
+impl<T, K> Entropy<T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Returns the entropy of the discrete uniform distribution
     ///
     /// # Formula
@@ -195,13 +232,16 @@ impl Entropy<f64> for DiscreteUniform {
     /// ```ignore
     /// ln(max - min + 1)
     /// ```
-    fn entropy(&self) -> f64 {
-        let diff = (self.max - self.min) as f64;
-        (diff + 1.0).ln()
+    fn entropy(&self) -> T {
+        let diff = T::from(self.max - self.min).unwrap();
+        (diff + T::one()).ln()
     }
 }
 
-impl Skewness<f64> for DiscreteUniform {
+impl<T, K> Skewness<T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Returns the skewness of the discrete uniform distribution
     ///
     /// # Formula
@@ -209,12 +249,15 @@ impl Skewness<f64> for DiscreteUniform {
     /// ```ignore
     /// 0
     /// ```
-    fn skewness(&self) -> f64 {
-        0.0
+    fn skewness(&self) -> T {
+        T::zero()
     }
 }
 
-impl Median<f64> for DiscreteUniform {
+impl<T, K> Median<T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Returns the median of the discrete uniform distribution
     ///
     /// # Formula
@@ -222,12 +265,15 @@ impl Median<f64> for DiscreteUniform {
     /// ```ignore
     /// (max + min) / 2
     /// ```
-    fn median(&self) -> f64 {
-        (self.min + self.max) as f64 / 2.0
+    fn median(&self) -> T {
+        T::from(self.min + self.max).unwrap() / T::from(2.0).unwrap()
     }
 }
 
-impl Mode<i64> for DiscreteUniform {
+impl<T, K> Mode<K> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Returns the mode for the discrete uniform distribution
     ///
     /// # Remarks
@@ -240,12 +286,15 @@ impl Mode<i64> for DiscreteUniform {
     /// ```ignore
     /// N/A // (max + min) / 2 for the middle element
     /// ```
-    fn mode(&self) -> i64 {
-        ((self.min + self.max) as f64 / 2.0).floor() as i64
+    fn mode(&self) -> K {
+        K::from((T::from(self.min + self.max).unwrap() / T::from(2.0).unwrap()).floor()).unwrap()
     }
 }
 
-impl Discrete<i64, f64> for DiscreteUniform {
+impl<T, K> Discrete<K, T> for DiscreteUniform<T, K>
+    where T: Float,
+          K: Signed
+{
     /// Calculates the probability mass function for the discrete uniform
     /// distribution at `x`
     ///
@@ -258,11 +307,11 @@ impl Discrete<i64, f64> for DiscreteUniform {
     /// ```ignore
     /// 1 / (max - min + 1)
     /// ```
-    fn pmf(&self, x: i64) -> f64 {
+    fn pmf(&self, x: K) -> T {
         if x >= self.min && x <= self.max {
-            1.0 / (self.max - self.min + 1) as f64
+            T::one() / T::from(self.max - self.min + K::one()).unwrap()
         } else {
-            0.0
+            T::zero()
         }
     }
 
@@ -278,11 +327,11 @@ impl Discrete<i64, f64> for DiscreteUniform {
     /// ```ignore
     /// ln(1 / (max - min + 1))
     /// ```
-    fn ln_pmf(&self, x: i64) -> f64 {
+    fn ln_pmf(&self, x: K) -> T {
         if x >= self.min && x <= self.max {
-            -((self.max - self.min + 1) as f64).ln()
+            -(T::from(self.max - self.min + K::one()).unwrap()).ln()
         } else {
-            f64::NEG_INFINITY
+            T::neg_infinity()
         }
     }
 }
