@@ -10,6 +10,7 @@
 - `Beta` distribution is now generic over the floating point data types
 - `Chi` distribution is now generic over the floating point data types
 - `DiscreteUniform` distribution is now generic over the the floating point and signed data types
+- `Exponential` distribution is now generic over the floating point data types
 - `Poisson` uses `u64` instead of `i64` now
 
 ### v0.3.1

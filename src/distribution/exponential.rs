@@ -1,10 +1,10 @@
-use std::f64;
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
 use statistics::*;
 use distribution::{Univariate, Continuous, Distribution};
 use result::Result;
 use error::StatsError;
+use Float;
 
 /// Implements the [Exponential](https://en.wikipedia.org/wiki/Exponential_distribution)
 /// distribution and is a special case of the [Gamma](https://en.wikipedia.org/wiki/Gamma_distribution) distribution
@@ -21,11 +21,15 @@ use error::StatsError;
 /// assert_eq!(n.pdf(1.0), 0.3678794411714423215955);
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Exponential {
-    rate: f64,
+pub struct Exponential<T>
+    where T: Float
+{
+    rate: T,
 }
 
-impl Exponential {
+impl<T> Exponential<T>
+    where T: Float
+{
     /// Constructs a new exponential distribution with a
     /// rate (λ) of `rate`.
     ///
@@ -38,14 +42,14 @@ impl Exponential {
     /// ```
     /// use statrs::distribution::Exponential;
     ///
-    /// let mut result = Exponential::new(1.0);
+    /// let mut result = Exponential::new(1f64);
     /// assert!(result.is_ok());
     ///
-    /// result = Exponential::new(-1.0);
+    /// result = Exponential::new(-1f64);
     /// assert!(result.is_err());
     /// ```
-    pub fn new(rate: f64) -> Result<Exponential> {
-        if rate.is_nan() || rate <= 0.0 {
+    pub fn new(rate: T) -> Result<Exponential<T>> {
+        if rate.is_nan() || rate <= T::zero() {
             Err(StatsError::BadParams)
         } else {
             Ok(Exponential { rate: rate })
@@ -59,33 +63,39 @@ impl Exponential {
     /// ```
     /// use statrs::distribution::Exponential;
     ///
-    /// let n = Exponential::new(1.0).unwrap();
+    /// let n = Exponential::new(1f64).unwrap();
     /// assert_eq!(n.rate(), 1.0);
     /// ```
-    pub fn rate(&self) -> f64 {
+    pub fn rate(&self) -> T {
         self.rate
     }
 }
 
-impl Sample<f64> for Exponential {
+impl<T> Sample<T> for Exponential<T>
+    where T: Float
+{
     /// Generate a random sample from an exponential
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn sample<R: Rng>(&mut self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&mut self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl IndependentSample<f64> for Exponential {
+impl<T> IndependentSample<T> for Exponential<T>
+    where T: Float
+{
     /// Generate a random independent sample from an exponential
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn ind_sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn ind_sample<R: Rng>(&self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl Distribution<f64> for Exponential {
+impl<T> Distribution<T> for Exponential<T>
+    where T: Float
+{
     /// Generate a random sample from the exponential distribution
     /// using `r` as the source of randomness
     ///
@@ -99,20 +109,22 @@ impl Distribution<f64> for Exponential {
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n = Exponential::new(1.0).unwrap();
+    /// let n = Exponential::new(1f64).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
-    fn sample<R: Rng>(&self, r: &mut R) -> f64 {
-        let mut x = r.next_f64();
-        while x == 0.0 {
-            x = r.next_f64();
+    fn sample<R: Rng>(&self, r: &mut R) -> T {
+        let mut x = r.gen::<T>();
+        while x == T::zero() {
+            x = r.gen::<T>();
         }
         -x.ln() / self.rate
     }
 }
 
-impl Univariate<f64, f64> for Exponential {
+impl<T> Univariate<T, T> for Exponential<T>
+    where T: Float
+{
     /// Calculates the cumulative distribution function for the
     /// exponential distribution at `x`
     ///
@@ -127,13 +139,16 @@ impl Univariate<f64, f64> for Exponential {
     /// ```
     ///
     /// where `λ` is the rate
-    fn cdf(&self, x: f64) -> f64 {
-        assert!(x >= 0.0, format!("{}", StatsError::ArgNotNegative("x")));
-        1.0 - (-self.rate * x).exp()
+    fn cdf(&self, x: T) -> T {
+        assert!(x >= T::zero(),
+                format!("{}", StatsError::ArgNotNegative("x")));
+        T::one() - (-self.rate * x).exp()
     }
 }
 
-impl Min<f64> for Exponential {
+impl<T> Min<T> for Exponential<T>
+    where T: Float
+{
     /// Returns the minimum value in the domain of the exponential
     /// distribution representable by a double precision float
     ///
@@ -142,12 +157,14 @@ impl Min<f64> for Exponential {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> f64 {
-        0.0
+    fn min(&self) -> T {
+        T::zero()
     }
 }
 
-impl Max<f64> for Exponential {
+impl<T> Max<T> for Exponential<T>
+    where T: Float
+{
     /// Returns the maximum value in the domain of the exponential
     /// distribution representable by a double precision float
     ///
@@ -156,12 +173,14 @@ impl Max<f64> for Exponential {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> f64 {
-        f64::INFINITY
+    fn max(&self) -> T {
+        T::infinity()
     }
 }
 
-impl Mean<f64> for Exponential {
+impl<T> Mean<T> for Exponential<T>
+    where T: Float
+{
     /// Returns the mean of the exponential distribution
     ///
     /// # Formula
@@ -171,12 +190,14 @@ impl Mean<f64> for Exponential {
     /// ```
     ///
     /// where `λ` is the rate
-    fn mean(&self) -> f64 {
-        1.0 / self.rate
+    fn mean(&self) -> T {
+        T::one() / self.rate
     }
 }
 
-impl Variance<f64> for Exponential {
+impl<T> Variance<T> for Exponential<T>
+    where T: Float
+{
     /// Returns the variance of the exponential distribution
     ///
     /// # Formula
@@ -186,8 +207,8 @@ impl Variance<f64> for Exponential {
     /// ```
     ///
     /// where `λ` is the rate
-    fn variance(&self) -> f64 {
-        1.0 / (self.rate * self.rate)
+    fn variance(&self) -> T {
+        T::one() / (self.rate * self.rate)
     }
 
     /// Returns the standard deviation of the exponential distribution
@@ -199,12 +220,14 @@ impl Variance<f64> for Exponential {
     /// ```
     ///
     /// where `λ` is the rate
-    fn std_dev(&self) -> f64 {
-        1.0 / self.rate
+    fn std_dev(&self) -> T {
+        T::one() / self.rate
     }
 }
 
-impl Entropy<f64> for Exponential {
+impl<T> Entropy<T> for Exponential<T>
+    where T: Float
+{
     /// Returns the entropy of the exponential distribution
     ///
     /// # Formula
@@ -214,12 +237,14 @@ impl Entropy<f64> for Exponential {
     /// ```
     ///
     /// where `λ` is the rate
-    fn entropy(&self) -> f64 {
-        1.0 - self.rate.ln()
+    fn entropy(&self) -> T {
+        T::one() - self.rate.ln()
     }
 }
 
-impl Skewness<f64> for Exponential {
+impl<T> Skewness<T> for Exponential<T>
+    where T: Float
+{
     /// Returns the skewness of the exponential distribution
     ///
     /// # Formula
@@ -227,12 +252,14 @@ impl Skewness<f64> for Exponential {
     /// ```ignore
     /// 2
     /// ```
-    fn skewness(&self) -> f64 {
-        2.0
+    fn skewness(&self) -> T {
+        T::from(2.0).unwrap()
     }
 }
 
-impl Median<f64> for Exponential {
+impl<T> Median<T> for Exponential<T>
+    where T: Float
+{
     /// Returns the median of the exponential distribution
     ///
     /// # Formula
@@ -242,12 +269,14 @@ impl Median<f64> for Exponential {
     /// ```
     ///
     /// where `λ` is the rate
-    fn median(&self) -> f64 {
-        f64::consts::LN_2 / self.rate
+    fn median(&self) -> T {
+        T::LN_2() / self.rate
     }
 }
 
-impl Mode<f64> for Exponential {
+impl<T> Mode<T> for Exponential<T>
+    where T: Float
+{
     /// Returns the mode of the exponential distribution
     ///
     /// # Formula
@@ -255,12 +284,14 @@ impl Mode<f64> for Exponential {
     /// ```ignore
     /// 0
     /// ```
-    fn mode(&self) -> f64 {
-        0.0
+    fn mode(&self) -> T {
+        T::zero()
     }
 }
 
-impl Continuous<f64, f64> for Exponential {
+impl<T> Continuous<T, T> for Exponential<T>
+    where T: Float
+{
     /// Calculates the probability density function for the exponential
     /// distribution at `x`
     ///
@@ -275,8 +306,9 @@ impl Continuous<f64, f64> for Exponential {
     /// ```
     ///
     /// where `λ` is the rate
-    fn pdf(&self, x: f64) -> f64 {
-        assert!(x >= 0.0, format!("{}", StatsError::ArgNotNegative("x")));
+    fn pdf(&self, x: T) -> T {
+        assert!(x >= T::zero(),
+                format!("{}", StatsError::ArgNotNegative("x")));
         self.rate * (-self.rate * x).exp()
     }
 
@@ -294,8 +326,9 @@ impl Continuous<f64, f64> for Exponential {
     /// ```
     ///
     /// where `λ` is the rate
-    fn ln_pdf(&self, x: f64) -> f64 {
-        assert!(x >= 0.0, format!("{}", StatsError::ArgNotNegative("x")));
+    fn ln_pdf(&self, x: T) -> T {
+        assert!(x >= T::zero(),
+                format!("{}", StatsError::ArgNotNegative("x")));
         self.rate.ln() - self.rate * x
     }
 }
@@ -303,11 +336,10 @@ impl Continuous<f64, f64> for Exponential {
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[cfg(test)]
 mod test {
-    use std::f64;
     use statistics::*;
     use distribution::{Univariate, Continuous, Exponential};
 
-    fn try_create(rate: f64) -> Exponential {
+    fn try_create(rate: f64) -> Exponential<f64> {
         let n = Exponential::new(rate);
         assert!(n.is_ok());
         n.unwrap()
@@ -324,28 +356,28 @@ mod test {
     }
 
     fn get_value<F>(rate: f64, eval: F) -> f64
-        where F: Fn(Exponential) -> f64
+        where F: Fn(Exponential<f64>) -> f64
     {
         let n = try_create(rate);
         eval(n)
     }
 
     fn test_case<F>(rate: f64, expected: f64, eval: F)
-        where F: Fn(Exponential) -> f64
+        where F: Fn(Exponential<f64>) -> f64
     {
         let x = get_value(rate, eval);
         assert_eq!(expected, x);
     }
 
     fn test_almost<F>(rate: f64, expected: f64, acc: f64, eval: F)
-        where F: Fn(Exponential) -> f64
+        where F: Fn(Exponential<f64>) -> f64
     {
         let x = get_value(rate, eval);
         assert_almost_eq!(expected, x, acc);
     }
 
     fn test_is_nan<F>(rate: f64, eval: F)
-        where F : Fn(Exponential) -> f64
+        where F : Fn(Exponential<f64>) -> f64
     {
         let x = get_value(rate, eval);
         assert!(x.is_nan());
