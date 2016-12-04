@@ -336,6 +336,7 @@ impl<T> Continuous<T, T> for Exponential<T>
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[cfg(test)]
 mod test {
+    use std::f64;
     use statistics::*;
     use distribution::{Univariate, Continuous, Exponential};
 

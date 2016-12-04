@@ -1,4 +1,3 @@
-use std::f64;
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
 use function::gamma;
@@ -22,12 +21,16 @@ use Float;
 /// assert!(prec::almost_eq(n.pdf(2.0), 0.270670566473225383788, 1e-15));
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Gamma {
-    shape: f64,
-    rate: f64,
+pub struct Gamma<T>
+    where T: Float
+{
+    shape: T,
+    rate: T,
 }
 
-impl Gamma {
+impl<T> Gamma<T>
+    where T: Float
+{
     /// Constructs a new gamma distribution with a shape (α)
     /// of `shape` and a rate (β) of `rate`
     ///
@@ -41,23 +44,20 @@ impl Gamma {
     /// ```
     /// use statrs::distribution::Gamma;
     ///
-    /// let mut result = Gamma::new(3.0, 1.0);
+    /// let mut result = Gamma::new(3f64, 1.0);
     /// assert!(result.is_ok());
     ///
-    /// let result = Gamma::new(0.0, 0.0);
+    /// let result = Gamma::new(0f64, 0.0);
     /// assert!(result.is_err());
     /// ```
-    pub fn new(shape: f64, rate: f64) -> Result<Gamma> {
-        let is_nan = shape.is_nan() || rate.is_nan();
-        match (shape, rate, is_nan) {
-            (_, _, true) => Err(StatsError::BadParams),
-            (_, _, false) if shape <= 0.0 || rate <= 0.0 => Err(StatsError::BadParams),
-            (_, _, false) => {
-                Ok(Gamma {
-                    shape: shape,
-                    rate: rate,
-                })
-            }
+    pub fn new(shape: T, rate: T) -> Result<Gamma<T>> {
+        if !valid_gamma_parameters(shape, rate) {
+            Err(StatsError::BadParams)
+        } else {
+            Ok(Gamma {
+                shape: shape,
+                rate: rate,
+            })
         }
     }
 
@@ -68,10 +68,10 @@ impl Gamma {
     /// ```
     /// use statrs::distribution::Gamma;
     ///
-    /// let n = Gamma::new(3.0, 1.0).unwrap();
+    /// let n = Gamma::new(3f64, 1.0).unwrap();
     /// assert_eq!(n.shape(), 3.0);
     /// ```
-    pub fn shape(&self) -> f64 {
+    pub fn shape(&self) -> T {
         self.shape
     }
 
@@ -82,33 +82,39 @@ impl Gamma {
     /// ```
     /// use statrs::distribution::Gamma;
     ///
-    /// let n = Gamma::new(3.0, 1.0).unwrap();
+    /// let n = Gamma::new(3f64, 1.0).unwrap();
     /// assert_eq!(n.rate(), 1.0);
     /// ```
-    pub fn rate(&self) -> f64 {
+    pub fn rate(&self) -> T {
         self.rate
     }
 }
 
-impl Sample<f64> for Gamma {
+impl<T> Sample<T> for Gamma<T>
+    where T: Float
+{
     /// Generate a random sample from a gamma
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn sample<R: Rng>(&mut self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&mut self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl IndependentSample<f64> for Gamma {
+impl<T> IndependentSample<T> for Gamma<T>
+    where T: Float
+{
     /// Generate a random independent sample from a gamma
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn ind_sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn ind_sample<R: Rng>(&self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl Distribution<f64> for Gamma {
+impl<T> Distribution<T> for Gamma<T>
+    where T: Float
+{
     /// Generate a random sample from a gamma distribution using
     /// `r` as the source of randomness. The implementation is based
     /// on:
@@ -131,16 +137,18 @@ impl Distribution<f64> for Gamma {
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n = Gamma::new(3.0, 1.0).unwrap();
+    /// let n = Gamma::new(3f64, 1.0).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
-    fn sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&self, r: &mut R) -> T {
         sample_unchecked(r, self.shape, self.rate)
     }
 }
 
-impl Univariate<f64, f64> for Gamma {
+impl<T> Univariate<T, T> for Gamma<T>
+    where T: Float
+{
     /// Calculates the cumulative distribution function for the gamma distribution
     /// at `x`
     ///
@@ -156,19 +164,22 @@ impl Univariate<f64, f64> for Gamma {
     ///
     /// where `α` is the shape, `β` is the rate, `Γ` is the gamma function,
     /// and `γ` is the lower incomplete gamma function
-    fn cdf(&self, x: f64) -> f64 {
-        assert!(x > 0.0, format!("{}", StatsError::ArgMustBePositive("x")));
-        if x == self.shape && self.rate == f64::INFINITY {
-            1.0
-        } else if self.rate == f64::INFINITY {
-            0.0
+    fn cdf(&self, x: T) -> T {
+        assert!(x > T::zero(),
+                format!("{}", StatsError::ArgMustBePositive("x")));
+        if x == self.shape && self.rate == T::infinity() {
+            T::one()
+        } else if self.rate == T::infinity() {
+            T::zero()
         } else {
             gamma::gamma_lr(self.shape, x * self.rate)
         }
     }
 }
 
-impl Min<f64> for Gamma {
+impl<T> Min<T> for Gamma<T>
+    where T: Float
+{
     /// Returns the minimum value in the domain of the
     /// gamma distribution representable by a double precision
     /// float
@@ -178,12 +189,14 @@ impl Min<f64> for Gamma {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> f64 {
-        0.0
+    fn min(&self) -> T {
+        T::zero()
     }
 }
 
-impl Max<f64> for Gamma {
+impl<T> Max<T> for Gamma<T>
+    where T: Float
+{
     /// Returns the maximum value in the domain of the
     /// gamma distribution representable by a double precision
     /// float
@@ -193,12 +206,14 @@ impl Max<f64> for Gamma {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> f64 {
-        f64::INFINITY
+    fn max(&self) -> T {
+        T::infinity()
     }
 }
 
-impl Mean<f64> for Gamma {
+impl<T> Mean<T> for Gamma<T>
+    where T: Float
+{
     /// Returns the mean of the gamma distribution
     ///
     /// # Remarks
@@ -213,8 +228,8 @@ impl Mean<f64> for Gamma {
     /// ```
     ///
     /// where `α` is the shape and `β` is the rate
-    fn mean(&self) -> f64 {
-        if self.rate == f64::INFINITY {
+    fn mean(&self) -> T {
+        if self.rate == T::infinity() {
             self.shape
         } else {
             self.shape / self.rate
@@ -222,7 +237,9 @@ impl Mean<f64> for Gamma {
     }
 }
 
-impl Variance<f64> for Gamma {
+impl<T> Variance<T> for Gamma<T>
+    where T: Float
+{
     /// Returns the variance of the gamma distribution
     ///
     /// # Formula
@@ -232,9 +249,9 @@ impl Variance<f64> for Gamma {
     /// ```
     ///
     /// where `α` is the shape and `β` is the rate
-    fn variance(&self) -> f64 {
-        if self.rate == f64::INFINITY {
-            0.0
+    fn variance(&self) -> T {
+        if self.rate == T::infinity() {
+            T::zero()
         } else {
             self.shape / (self.rate * self.rate)
         }
@@ -249,12 +266,14 @@ impl Variance<f64> for Gamma {
     /// ```
     ///
     /// where `α` is the shape and `β` is the rate
-    fn std_dev(&self) -> f64 {
+    fn std_dev(&self) -> T {
         self.variance().sqrt()
     }
 }
 
-impl Entropy<f64> for Gamma {
+impl<T> Entropy<T> for Gamma<T>
+    where T: Float
+{
     /// Returns the entropy of the gamma distribution
     ///
     /// # Formula
@@ -265,17 +284,19 @@ impl Entropy<f64> for Gamma {
     ///
     /// where `α` is the shape, `β` is the rate, `Γ` is the gamma function,
     /// and `ψ` is the digamma function
-    fn entropy(&self) -> f64 {
-        if self.rate == f64::INFINITY {
-            0.0
+    fn entropy(&self) -> T {
+        if self.rate == T::infinity() {
+            T::zero()
         } else {
             self.shape - self.rate.ln() + gamma::ln_gamma(self.shape) +
-            (1.0 - self.shape) * gamma::digamma(self.shape)
+            (T::one() - self.shape) * gamma::digamma(self.shape)
         }
     }
 }
 
-impl Skewness<f64> for Gamma {
+impl<T> Skewness<T> for Gamma<T>
+    where T: Float
+{
     /// Returns the skewness of the gamma distribution
     ///
     /// # Formula
@@ -285,12 +306,14 @@ impl Skewness<f64> for Gamma {
     /// ```
     ///
     /// where `α` is the shape
-    fn skewness(&self) -> f64 {
-        2.0 / self.shape.sqrt()
+    fn skewness(&self) -> T {
+        T::from(2.0).unwrap() / self.shape.sqrt()
     }
 }
 
-impl Mode<f64> for Gamma {
+impl<T> Mode<T> for Gamma<T>
+    where T: Float
+{
     /// Returns the mode for the gamma distribution
     ///
     /// # Remarks
@@ -305,16 +328,18 @@ impl Mode<f64> for Gamma {
     /// ```
     ///
     /// where `α` is the shape and `β` is the rate
-    fn mode(&self) -> f64 {
-        if self.rate == f64::INFINITY {
+    fn mode(&self) -> T {
+        if self.rate == T::infinity() {
             self.shape
         } else {
-            (self.shape - 1.0) / self.rate
+            (self.shape - T::one()) / self.rate
         }
     }
 }
 
-impl Continuous<f64, f64> for Gamma {
+impl<T> Continuous<T, T> for Gamma<T>
+    where T: Float
+{
     /// Calculates the probability density function for the gamma distribution
     /// at `x`
     ///
@@ -334,18 +359,19 @@ impl Continuous<f64, f64> for Gamma {
     /// ```
     ///
     /// where `α` is the shape, `β` is the rate, and `Γ` is the gamma function
-    fn pdf(&self, x: f64) -> f64 {
-        assert!(x > 0.0, format!("{}", StatsError::ArgMustBePositive("x")));
-        if x == self.shape && self.rate == f64::INFINITY {
-            f64::INFINITY
-        } else if self.rate == f64::INFINITY {
-            0.0
-        } else if self.shape == 1.0 {
+    fn pdf(&self, x: T) -> T {
+        assert!(x > T::zero(),
+                format!("{}", StatsError::ArgMustBePositive("x")));
+        if x == self.shape && self.rate == T::infinity() {
+            T::infinity()
+        } else if self.rate == T::infinity() {
+            T::zero()
+        } else if self.shape == T::one() {
             self.rate * (-self.rate * x).exp()
-        } else if self.shape > 160.0 {
+        } else if self.shape > T::from(160.0).unwrap() {
             self.ln_pdf(x).exp()
         } else {
-            self.rate.powf(self.shape) * x.powf(self.shape - 1.0) * (-self.rate * x).exp() /
+            self.rate.powf(self.shape) * x.powf(self.shape - T::one()) * (-self.rate * x).exp() /
             gamma::gamma(self.shape)
         }
     }
@@ -369,16 +395,17 @@ impl Continuous<f64, f64> for Gamma {
     /// ```
     ///
     /// where `α` is the shape, `β` is the rate, and `Γ` is the gamma function
-    fn ln_pdf(&self, x: f64) -> f64 {
-        assert!(x > 0.0, format!("{}", StatsError::ArgMustBePositive("x")));
-        if x == self.shape && self.rate == f64::INFINITY {
-            f64::INFINITY
-        } else if self.rate == f64::INFINITY {
-            f64::NEG_INFINITY
-        } else if self.shape == 1.0 {
+    fn ln_pdf(&self, x: T) -> T {
+        assert!(x > T::zero(),
+                format!("{}", StatsError::ArgMustBePositive("x")));
+        if x == self.shape && self.rate == T::infinity() {
+            T::infinity()
+        } else if self.rate == T::infinity() {
+            T::neg_infinity()
+        } else if self.shape == T::one() {
             self.rate.ln() - self.rate * x
         } else {
-            self.shape * self.rate.ln() + (self.shape - 1.0) * x.ln() - self.rate * x -
+            self.shape * self.rate.ln() + (self.shape - T::one()) * x.ln() - self.rate * x -
             gamma::ln_gamma(self.shape)
         }
     }
@@ -434,6 +461,20 @@ pub fn sample_unchecked<T, R>(r: &mut R, shape: T, rate: T) -> T
     }
 }
 
+// Returns if `shape_a` and `shape_b` are valid parameters
+// for a gamma distribution
+fn valid_gamma_parameters<T>(shape: T, rate: T) -> bool
+    where T: Float
+{
+    if shape.is_nan() || rate.is_nan() {
+        false
+    } else if shape <= T::zero() || rate <= T::zero() {
+        false
+    } else {
+        true
+    }
+}
+
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[cfg(test)]
 mod test {
@@ -441,7 +482,7 @@ mod test {
     use statistics::*;
     use distribution::{Univariate, Continuous, Gamma};
 
-    fn try_create(shape: f64, rate: f64) -> Gamma {
+    fn try_create(shape: f64, rate: f64) -> Gamma<f64> {
         let n = Gamma::new(shape, rate);
         assert!(n.is_ok());
         n.unwrap()
@@ -459,21 +500,21 @@ mod test {
     }
 
     fn get_value<F>(shape: f64, rate: f64, eval: F) -> f64
-        where F: Fn(Gamma) -> f64
+        where F: Fn(Gamma<f64>) -> f64
     {
         let n = try_create(shape, rate);
         eval(n)
     }
 
     fn test_case<F>(shape: f64, rate: f64, expected: f64, eval: F)
-        where F: Fn(Gamma) -> f64
+        where F: Fn(Gamma<f64>) -> f64
     {
         let x = get_value(shape, rate, eval);
         assert_eq!(expected, x);
     }
 
     fn test_almost<F>(shape: f64, rate: f64, expected: f64, acc: f64, eval: F)
-        where F: Fn(Gamma) -> f64
+        where F: Fn(Gamma<f64>) -> f64
     {
         let x = get_value(shape, rate, eval);
         assert_almost_eq!(expected, x, acc);

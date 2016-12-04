@@ -1,9 +1,9 @@
-use std::f64;
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
 use statistics::*;
 use distribution::{Univariate, Continuous, Distribution, Gamma};
 use result::Result;
+use Float;
 
 /// Implements the [Chi-squared](https://en.wikipedia.org/wiki/Chi-squared_distribution)
 /// distribution which is a special case of the [Gamma](https://en.wikipedia.org/wiki/Gamma_distribution) distribution
@@ -21,12 +21,16 @@ use result::Result;
 /// assert!(prec::almost_eq(n.pdf(4.0), 0.107981933026376103901, 1e-15));
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct ChiSquared {
-    freedom: f64,
-    g: Gamma,
+pub struct ChiSquared<T>
+    where T: Float
+{
+    freedom: T,
+    g: Gamma<T>,
 }
 
-impl ChiSquared {
+impl<T> ChiSquared<T>
+    where T: Float
+{
     /// Constructs a new chi-squared distribution with `freedom`
     /// degrees of freedom. This is equivalent to a Gamma distribution
     /// with a shape of `freedom / 2.0` and a rate of `0.5`.
@@ -47,8 +51,8 @@ impl ChiSquared {
     /// result = ChiSquared::new(0.0);
     /// assert!(result.is_err());
     /// ```
-    pub fn new(freedom: f64) -> Result<ChiSquared> {
-        Gamma::new(freedom / 2.0, 0.5).map(|g| {
+    pub fn new(freedom: T) -> Result<ChiSquared<T>> {
+        Gamma::new(freedom / T::from(2.0).unwrap(), T::from(0.5).unwrap()).map(|g| {
             ChiSquared {
                 freedom: freedom,
                 g: g,
@@ -67,7 +71,7 @@ impl ChiSquared {
     /// let n = ChiSquared::new(3.0).unwrap();
     /// assert_eq!(n.freedom(), 3.0);
     /// ```
-    pub fn freedom(&self) -> f64 {
+    pub fn freedom(&self) -> T {
         self.freedom
     }
 
@@ -81,7 +85,7 @@ impl ChiSquared {
     /// let n = ChiSquared::new(3.0).unwrap();
     /// assert_eq!(n.shape(), 3.0 / 2.0);
     /// ```
-    pub fn shape(&self) -> f64 {
+    pub fn shape(&self) -> T {
         self.g.shape()
     }
 
@@ -95,30 +99,36 @@ impl ChiSquared {
     /// let n = ChiSquared::new(3.0).unwrap();
     /// assert_eq!(n.rate(), 0.5);
     /// ```
-    pub fn rate(&self) -> f64 {
+    pub fn rate(&self) -> T {
         self.g.rate()
     }
 }
 
-impl Sample<f64> for ChiSquared {
+impl<T> Sample<T> for ChiSquared<T>
+    where T: Float
+{
     /// Generate a random sample from a chi-squared
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn sample<R: Rng>(&mut self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&mut self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl IndependentSample<f64> for ChiSquared {
+impl<T> IndependentSample<T> for ChiSquared<T>
+    where T: Float
+{
     /// Generate a random independent sample from a Chi
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn ind_sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn ind_sample<R: Rng>(&self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl Distribution<f64> for ChiSquared {
+impl<T> Distribution<T> for ChiSquared<T>
+    where T: Float
+{
     /// Generate a random sample from the chi-squared distribution
     /// using `r` as the source of randomness
     ///
@@ -136,12 +146,14 @@ impl Distribution<f64> for ChiSquared {
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
-    fn sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&self, r: &mut R) -> T {
         self.g.sample(r)
     }
 }
 
-impl Univariate<f64, f64> for ChiSquared {
+impl<T> Univariate<T, T> for ChiSquared<T>
+    where T: Float
+{
     /// Calculates the cumulative distribution function for the
     /// chi-squared distribution at `x`
     ///
@@ -157,12 +169,14 @@ impl Univariate<f64, f64> for ChiSquared {
     ///
     /// where `k` is the degrees of freedom, `Γ` is the gamma function,
     /// and `γ` is the lower incomplete gamma function
-    fn cdf(&self, x: f64) -> f64 {
+    fn cdf(&self, x: T) -> T {
         self.g.cdf(x)
     }
 }
 
-impl Min<f64> for ChiSquared {
+impl<T> Min<T> for ChiSquared<T>
+    where T: Float
+{
     /// Returns the minimum value in the domain of the
     /// chi-squared distribution representable by a double precision
     /// float
@@ -172,12 +186,14 @@ impl Min<f64> for ChiSquared {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> f64 {
-        0.0
+    fn min(&self) -> T {
+        T::zero()
     }
 }
 
-impl Max<f64> for ChiSquared {
+impl<T> Max<T> for ChiSquared<T>
+    where T: Float
+{
     /// Returns the maximum value in the domain of the
     /// chi-squared distribution representable by a double precision
     /// float
@@ -187,12 +203,14 @@ impl Max<f64> for ChiSquared {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> f64 {
-        f64::INFINITY
+    fn max(&self) -> T {
+        T::infinity()
     }
 }
 
-impl Mean<f64> for ChiSquared {
+impl<T> Mean<T> for ChiSquared<T>
+    where T: Float
+{
     /// Returns the mean of the chi-squared distribution
     ///
     /// # Formula
@@ -202,12 +220,14 @@ impl Mean<f64> for ChiSquared {
     /// ```
     ///
     /// where `k` is the degrees of freedom
-    fn mean(&self) -> f64 {
+    fn mean(&self) -> T {
         self.g.mean()
     }
 }
 
-impl Variance<f64> for ChiSquared {
+impl<T> Variance<T> for ChiSquared<T>
+    where T: Float
+{
     /// Returns the variance of the chi-squared distribution
     ///
     /// # Formula
@@ -217,7 +237,7 @@ impl Variance<f64> for ChiSquared {
     /// ```
     ///
     /// where `k` is the degrees of freedom
-    fn variance(&self) -> f64 {
+    fn variance(&self) -> T {
         self.g.variance()
     }
 
@@ -230,12 +250,14 @@ impl Variance<f64> for ChiSquared {
     /// ```
     ///
     /// where `k` is the degrees of freedom
-    fn std_dev(&self) -> f64 {
+    fn std_dev(&self) -> T {
         self.g.std_dev()
     }
 }
 
-impl Entropy<f64> for ChiSquared {
+impl<T> Entropy<T> for ChiSquared<T>
+    where T: Float
+{
     /// Returns the entropy of the chi-squared distribution
     ///
     /// # Formula
@@ -246,12 +268,14 @@ impl Entropy<f64> for ChiSquared {
     ///
     /// where `k` is the degrees of freedom, `Γ` is the gamma function,
     /// and `ψ` is the digamma function
-    fn entropy(&self) -> f64 {
+    fn entropy(&self) -> T {
         self.g.entropy()
     }
 }
 
-impl Skewness<f64> for ChiSquared {
+impl<T> Skewness<T> for ChiSquared<T>
+    where T: Float
+{
     /// Returns the skewness of the chi-squared distribution
     ///
     /// # Formula
@@ -261,12 +285,14 @@ impl Skewness<f64> for ChiSquared {
     /// ```
     ///
     /// where `k` is the degrees of freedom
-    fn skewness(&self) -> f64 {
+    fn skewness(&self) -> T {
         self.g.skewness()
     }
 }
 
-impl Median<f64> for ChiSquared {
+impl<T> Median<T> for ChiSquared<T>
+    where T: Float
+{
     /// Returns the median  of the chi-squared distribution
     ///
     /// # Formula
@@ -274,19 +300,22 @@ impl Median<f64> for ChiSquared {
     /// ```ignore
     /// k * (1 - (2 / 9k))^3
     /// ```
-    fn median(&self) -> f64 {
-        if self.freedom < 1.0 {
+    fn median(&self) -> T {
+        if self.freedom < T::one() {
             // if k is small, calculate using expansion of formula
-            self.freedom - 2.0 / 3.0 + 12.0 / (81.0 * self.freedom) -
-            8.0 / (729.0 * self.freedom * self.freedom)
+            self.freedom - T::from(2.0 / 3.0).unwrap() +
+            T::from(12.0).unwrap() / (T::from(81.0).unwrap() * self.freedom) -
+            T::from(8.0).unwrap() / (T::from(729.0).unwrap() * self.freedom * self.freedom)
         } else {
             // if k is large enough, median heads toward k - 2/3
-            self.freedom - 2.0 / 3.0
+            self.freedom - T::from(2.0 / 3.0).unwrap()
         }
     }
 }
 
-impl Mode<f64> for ChiSquared {
+impl<T> Mode<T> for ChiSquared<T>
+    where T: Float
+{
     /// Returns the mode of the chi-squared distribution
     ///
     /// # Formula
@@ -296,12 +325,14 @@ impl Mode<f64> for ChiSquared {
     /// ```
     ///
     /// where `k` is the degrees of freedom
-    fn mode(&self) -> f64 {
+    fn mode(&self) -> T {
         self.g.mode()
     }
 }
 
-impl Continuous<f64, f64> for ChiSquared {
+impl<T> Continuous<T, T> for ChiSquared<T>
+    where T: Float
+{
     /// Calculates the probability density function for the chi-squared
     /// distribution at `x`
     ///
@@ -316,7 +347,7 @@ impl Continuous<f64, f64> for ChiSquared {
     /// ```
     ///
     /// where `k` is the degrees of freedom and `Γ` is the gamma function
-    fn pdf(&self, x: f64) -> f64 {
+    fn pdf(&self, x: T) -> T {
         self.g.pdf(x)
     }
 
@@ -332,7 +363,7 @@ impl Continuous<f64, f64> for ChiSquared {
     /// ```ignore
     /// ln(1 / (2^(k / 2) * Γ(k / 2)) * x^((k / 2) - 1) * e^(-x / 2))
     /// ```
-    fn ln_pdf(&self, x: f64) -> f64 {
+    fn ln_pdf(&self, x: T) -> T {
         self.g.ln_pdf(x)
     }
 }
@@ -340,18 +371,17 @@ impl Continuous<f64, f64> for ChiSquared {
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[cfg(test)]
 mod test {
-    use std::f64;
     use statistics::Median;
     use distribution::ChiSquared;
 
-    fn try_create(freedom: f64) -> ChiSquared {
+    fn try_create(freedom: f64) -> ChiSquared<f64> {
         let n = ChiSquared::new(freedom);
         assert!(n.is_ok());
         n.unwrap()
     }
 
     fn test_case<F>(freedom: f64, expected: f64, eval: F)
-        where F: Fn(ChiSquared) -> f64
+        where F: Fn(ChiSquared<f64>) -> f64
     {
         let n = try_create(freedom);
         let x = eval(n);
@@ -359,7 +389,7 @@ mod test {
     }
 
     fn test_almost<F>(freedom: f64, expected: f64, acc: f64, eval: F)
-        where F: Fn(ChiSquared) -> f64
+        where F: Fn(ChiSquared<f64>) -> f64
     {
         let n = try_create(freedom);
         let x = eval(n);
