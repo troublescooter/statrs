@@ -1,4 +1,3 @@
-use std::f64;
 use rand::Rng;
 use rand::distributions::{Sample, IndependentSample};
 use function::erf;
@@ -7,6 +6,7 @@ use distribution::{Univariate, Continuous, Distribution};
 use result::Result;
 use error::StatsError;
 use consts::FloatConst;
+use Float;
 
 /// Implements the [Log-normal](https://en.wikipedia.org/wiki/Log-normal_distribution)
 /// distribution
@@ -18,17 +18,21 @@ use consts::FloatConst;
 /// use statrs::statistics::Mean;
 /// use statrs::prec;
 ///
-/// let n = LogNormal::new(0.0, 1.0).unwrap();
-/// assert_eq!(n.mean(), (0.5f64).exp());
+/// let n = LogNormal::new(0f64, 1.0).unwrap();
+/// assert_eq!(n.mean(), 0.5f64.exp());
 /// assert!(prec::almost_eq(n.pdf(1.0), 0.3989422804014326779399, 1e-16));
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct LogNormal {
-    location: f64,
-    scale: f64,
+pub struct LogNormal<T>
+    where T: Float
+{
+    location: T,
+    scale: T,
 }
 
-impl LogNormal {
+impl<T> LogNormal<T>
+    where T: Float
+{
     /// Constructs a new log-normal distribution with a location of `location`
     /// and a scale of `scale`
     ///
@@ -42,14 +46,14 @@ impl LogNormal {
     /// ```
     /// use statrs::distribution::LogNormal;
     ///
-    /// let mut result = LogNormal::new(0.0, 1.0);
+    /// let mut result = LogNormal::new(0f64, 1.0);
     /// assert!(result.is_ok());
     ///
-    /// result = LogNormal::new(0.0, 0.0);
+    /// result = LogNormal::new(0f64, 0.0);
     /// assert!(result.is_err());
     /// ```
-    pub fn new(location: f64, scale: f64) -> Result<LogNormal> {
-        if location.is_nan() || scale.is_nan() || scale <= 0.0 {
+    pub fn new(location: T, scale: T) -> Result<LogNormal<T>> {
+        if location.is_nan() || scale.is_nan() || scale <= T::zero() {
             Err(StatsError::BadParams)
         } else {
             Ok(LogNormal {
@@ -60,25 +64,31 @@ impl LogNormal {
     }
 }
 
-impl Sample<f64> for LogNormal {
+impl<T> Sample<T> for LogNormal<T>
+    where T: Float
+{
     /// Generate a random sample from a log-normal
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn sample<R: Rng>(&mut self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&mut self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl IndependentSample<f64> for LogNormal {
+impl<T> IndependentSample<T> for LogNormal<T>
+    where T: Float
+{
     /// Generate a random independent sample from a log-normal
     /// distribution using `r` as the source of randomness.
     /// Refer [here](#method.sample-1) for implementation details
-    fn ind_sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn ind_sample<R: Rng>(&self, r: &mut R) -> T {
         super::Distribution::sample(self, r)
     }
 }
 
-impl Distribution<f64> for LogNormal {
+impl<T> Distribution<T> for LogNormal<T>
+    where T: Float
+{
     /// Generate a random sample from the log-normal distribution
     /// using `r` as the source of randomness. Uses the Box-Muller
     /// algorithm
@@ -93,16 +103,18 @@ impl Distribution<f64> for LogNormal {
     ///
     /// # fn main() {
     /// let mut r = rand::StdRng::new().unwrap();
-    /// let n = LogNormal::new(0.0, 1.0).unwrap();
+    /// let n = LogNormal::new(0f64, 1.0).unwrap();
     /// print!("{}", n.sample::<StdRng>(&mut r));
     /// # }
     /// ```
-    fn sample<R: Rng>(&self, r: &mut R) -> f64 {
+    fn sample<R: Rng>(&self, r: &mut R) -> T {
         super::normal::sample_unchecked(r, self.location, self.scale).exp()
     }
 }
 
-impl Univariate<f64, f64> for LogNormal {
+impl<T> Univariate<T, T> for LogNormal<T>
+    where T: Float
+{
     /// Calculates the cumulative distribution function for the log-normal distribution
     /// at `x`
     ///
@@ -118,13 +130,16 @@ impl Univariate<f64, f64> for LogNormal {
     ///
     /// where `μ` is the location, `σ` is the scale, and `erf` is the
     /// error function
-    fn cdf(&self, x: f64) -> f64 {
-        assert!(x > 0.0, format!("{}", StatsError::ArgMustBePositive("x")));
-        0.5 * erf::erfc((self.location - x.ln()) / (self.scale * f64::consts::SQRT_2))
+    fn cdf(&self, x: T) -> T {
+        assert!(x > T::zero(),
+                format!("{}", StatsError::ArgMustBePositive("x")));
+        T::from(0.5).unwrap() * erf::erfc((self.location - x.ln()) / (self.scale * T::SQRT_2()))
     }
 }
 
-impl Min<f64> for LogNormal {
+impl<T> Min<T> for LogNormal<T>
+    where T: Float
+{
     /// Returns the minimum value in the domain of the log-normal
     /// distribution representable by a double precision float
     ///
@@ -133,12 +148,14 @@ impl Min<f64> for LogNormal {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> f64 {
-        0.0
+    fn min(&self) -> T {
+        T::zero()
     }
 }
 
-impl Max<f64> for LogNormal {
+impl<T> Max<T> for LogNormal<T>
+    where T: Float
+{
     /// Returns the maximum value in the domain of the log-normal
     /// distribution representable by a double precision float
     ///
@@ -147,12 +164,14 @@ impl Max<f64> for LogNormal {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> f64 {
-        f64::INFINITY
+    fn max(&self) -> T {
+        T::infinity()
     }
 }
 
-impl Mean<f64> for LogNormal {
+impl<T> Mean<T> for LogNormal<T>
+    where T: Float
+{
     /// Returns the mean of the log-normal distribution
     ///
     /// # Formula
@@ -162,12 +181,14 @@ impl Mean<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn mean(&self) -> f64 {
-        (self.location + self.scale * self.scale / 2.0).exp()
+    fn mean(&self) -> T {
+        (self.location + self.scale * self.scale / T::from(2.0).unwrap()).exp()
     }
 }
 
-impl Variance<f64> for LogNormal {
+impl<T> Variance<T> for LogNormal<T>
+    where T: Float
+{
     /// Returns the variance of the log-normal distribution
     ///
     /// # Formula
@@ -177,9 +198,9 @@ impl Variance<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn variance(&self) -> f64 {
+    fn variance(&self) -> T {
         let sigma2 = self.scale * self.scale;
-        (sigma2.exp() - 1.0) * (self.location + self.location + sigma2).exp()
+        (sigma2.exp() - T::one()) * (self.location + self.location + sigma2).exp()
     }
 
     /// Returns the standard deviation of the log-normal distribution
@@ -191,12 +212,14 @@ impl Variance<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn std_dev(&self) -> f64 {
+    fn std_dev(&self) -> T {
         self.variance().sqrt()
     }
 }
 
-impl Entropy<f64> for LogNormal {
+impl<T> Entropy<T> for LogNormal<T>
+    where T: Float
+{
     /// Returns the entropy of the log-normal distribution
     ///
     /// # Formula
@@ -206,12 +229,14 @@ impl Entropy<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn entropy(&self) -> f64 {
-        0.5 + self.scale.ln() + self.location + f64::LN_SQRT_2PI()
+    fn entropy(&self) -> T {
+        T::from(0.5).unwrap() + self.scale.ln() + self.location + T::LN_SQRT_2PI()
     }
 }
 
-impl Skewness<f64> for LogNormal {
+impl<T> Skewness<T> for LogNormal<T>
+    where T: Float
+{
     /// Returns the skewness of the log-normal distribution
     ///
     /// # Formula
@@ -221,13 +246,15 @@ impl Skewness<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn skewness(&self) -> f64 {
+    fn skewness(&self) -> T {
         let expsigma2 = (self.scale * self.scale).exp();
-        (expsigma2 + 2.0) * (expsigma2 - 1.0).sqrt()
+        (expsigma2 + T::from(2.0).unwrap()) * (expsigma2 - T::one()).sqrt()
     }
 }
 
-impl Median<f64> for LogNormal {
+impl<T> Median<T> for LogNormal<T>
+    where T: Float
+{
     /// Returns the median of the log-normal distribution
     ///
     /// # Formula
@@ -237,12 +264,14 @@ impl Median<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location
-    fn median(&self) -> f64 {
+    fn median(&self) -> T {
         self.location.exp()
     }
 }
 
-impl Mode<f64> for LogNormal {
+impl<T> Mode<T> for LogNormal<T>
+    where T: Float
+{
     /// Returns the mode of the log-normal distribution
     ///
     /// # Formula
@@ -252,12 +281,14 @@ impl Mode<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn mode(&self) -> f64 {
+    fn mode(&self) -> T {
         (self.location - self.scale * self.scale).exp()
     }
 }
 
-impl Continuous<f64, f64> for LogNormal {
+impl<T> Continuous<T, T> for LogNormal<T>
+    where T: Float
+{
     /// Calculates the probability density function for the log-normal
     /// distribution at `x`
     ///
@@ -272,10 +303,11 @@ impl Continuous<f64, f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn pdf(&self, x: f64) -> f64 {
-        assert!(x > 0.0, format!("{}", StatsError::ArgMustBePositive("x")));
+    fn pdf(&self, x: T) -> T {
+        assert!(x > T::zero(),
+                format!("{}", StatsError::ArgMustBePositive("x")));
         let d = (x.ln() - self.location) / self.scale;
-        (-0.5 * d * d).exp() / (x * f64::SQRT_2PI() * self.scale)
+        (-T::from(0.5).unwrap() * d * d).exp() / (x * T::SQRT_2PI() * self.scale)
     }
 
     /// Calculates the log probability density function for the log-normal
@@ -292,10 +324,11 @@ impl Continuous<f64, f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn ln_pdf(&self, x: f64) -> f64 {
-        assert!(x > 0.0, format!("{}", StatsError::ArgMustBePositive("x")));
+    fn ln_pdf(&self, x: T) -> T {
+        assert!(x > T::zero(),
+                format!("{}", StatsError::ArgMustBePositive("x")));
         let d = (x.ln() - self.location) / self.scale;
-        (-0.5 * d * d) - f64::LN_SQRT_2PI() - (x * self.scale).ln()
+        (-T::from(0.5).unwrap() * d * d) - T::LN_SQRT_2PI() - (x * self.scale).ln()
     }
 }
 
@@ -306,7 +339,7 @@ mod test {
     use statistics::*;
     use distribution::{Univariate, Continuous, LogNormal};
 
-    fn try_create(mean: f64, std_dev: f64) -> LogNormal {
+    fn try_create(mean: f64, std_dev: f64) -> LogNormal<f64> {
         let n = LogNormal::new(mean, std_dev);
         assert!(n.is_ok());
         n.unwrap()
@@ -318,21 +351,21 @@ mod test {
     }
 
     fn get_value<F>(mean: f64, std_dev: f64, eval: F) -> f64
-        where F: Fn(LogNormal) -> f64
+        where F: Fn(LogNormal<f64>) -> f64
     {
         let n = try_create(mean, std_dev);
         eval(n)
     }
 
     fn test_case<F>(mean: f64, std_dev: f64, expected: f64, eval: F)
-        where F: Fn(LogNormal) -> f64
+        where F: Fn(LogNormal<f64>) -> f64
     {
         let x = get_value(mean, std_dev, eval);
         assert_eq!(expected, x);
     }
 
     fn test_almost<F>(mean: f64, std_dev: f64, expected: f64, acc: f64, eval: F)
-        where F: Fn(LogNormal) -> f64
+        where F: Fn(LogNormal<f64>) -> f64
     {
         let x = get_value(mean, std_dev, eval);
         assert_almost_eq!(expected, x, acc);
