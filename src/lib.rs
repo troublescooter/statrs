@@ -59,3 +59,27 @@ pub use error::StatsError;
 /// Result type for the statrs library package that returns
 /// either a result type `T` or a `StatsError`
 pub type Result<T> = std::result::Result<T, StatsError>;
+
+/// modified signum that returns 0.0 if x == 0.0. This is
+/// mimics the behavior of the .NET `Math.Sign` in order to support
+/// some calculations like `inv_digamma` and the `sample` method for
+/// the Laplace distribution
+pub fn signum(x: f64) -> f64 {
+    if x == 0.0 {
+        0.0
+    } else {
+        x.signum()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use signum;
+
+    #[test]
+    fn test_signum() {
+        assert_eq!(-1f64.signum(), signum(-1.0));
+        assert_eq!(0.0, signum(-0.0));
+        assert_eq!(1f64.signum(), signum(1.0));
+    }
+}

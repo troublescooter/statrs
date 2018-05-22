@@ -2,6 +2,7 @@ HEAD
  - Create `distribution::WeakRngDistribution` trait for those who don't want to go through the trouble of importing `rand` and deciding on an RNG
  - Implement `distribution::WeakRngDistribution` for all distributions
  - Removed functions deprecated in `0.8.0` (`periodic`, `periodic_custom`, `sinusoidal`, `sinusoidal_custom`)
+ - Extract modified `signum` method into a public method
 
 v0.9.0
  - implemented infinite sequence generator for periodic sequence

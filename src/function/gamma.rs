@@ -4,6 +4,7 @@
 use consts;
 use error::StatsError;
 use prec;
+use signum;
 use std::f64;
 use Result;
 
@@ -407,17 +408,6 @@ pub fn inv_digamma(x: f64) -> f64 {
         i /= 2.0;
     }
     y
-}
-
-// modified signum that returns 0.0 if x == 0.0. Used
-// by inv_digamma, may consider extracting into a public
-// method
-fn signum(x: f64) -> f64 {
-    if x == 0.0 {
-        0.0
-    } else {
-        x.signum()
-    }
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
