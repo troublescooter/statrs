@@ -61,48 +61,38 @@ impl OrderStatistics<f64> for [f64] {
     fn ranks(&mut self, tie_breaker: RankTieBreaker) -> Vec<f64> {
         let n = self.len();
         let mut ranks: Vec<f64> = vec![0.0; n];
-        let mut index: Vec<usize> = (0..n).collect();
-
+        let mut enumerated: Vec<_> = self.iter().enumerate().collect();
+        enumerated.sort_by(|fst, snd| fst.1.partial_cmp(&snd.1).unwrap());
         match tie_breaker {
             RankTieBreaker::First => {
-                quick_sort_all(self, &mut *index, 0, n - 1);
-                unsafe {
-                    for i in 0..ranks.len() {
-                        ranks[*index.get_unchecked(i)] = (i + 1) as f64;
-                    }
+                for (i, idx) in enumerated.into_iter().map(|(idx, _)| idx).enumerate() {
+                    ranks[idx] = (i + 1) as f64
                 }
                 ranks
             }
             _ => {
-                sort(self, &mut *index);
+                let mut prev = 0;
                 let mut prev_idx = 0;
-                unsafe {
-                    for i in 1..n {
-                        if (*self.get_unchecked(i) - *self.get_unchecked(prev_idx)).abs() <= 0.0 {
-                            continue;
-                        }
-                        if i == prev_idx + 1 {
-                            ranks[*index.get_unchecked(prev_idx)] = i as f64;
-                        } else {
-                            handle_rank_ties(
-                                &mut *ranks,
-                                &*index,
-                                prev_idx as isize,
-                                i as isize,
-                                tie_breaker,
-                            );
-                        }
-                        prev_idx = i;
+                let mut prev_elt = 0.0;
+                for (i, (idx, elt)) in enumerated.iter().cloned().enumerate() {
+                    if i == 0 {
+                        prev_idx = idx;
+                        prev_elt = *elt;
                     }
+                    if (*elt - prev_elt).abs() <= 0.0 {
+                        continue;
+                    }
+                    if i == prev + 1 {
+                        ranks[prev_idx] = i as f64;
+                    } else {
+                        handle_rank_ties(&mut ranks, &enumerated, prev, i, tie_breaker);
+                    }
+                    prev = i;
+                    prev_idx = idx;
+                    prev_elt = *elt;
                 }
 
-                handle_rank_ties(
-                    &mut *ranks,
-                    &*index,
-                    prev_idx as isize,
-                    n as isize,
-                    tie_breaker,
-                );
+                handle_rank_ties(&mut ranks, &enumerated, prev, n, tie_breaker);
                 ranks
             }
         }
@@ -282,21 +272,20 @@ impl Median<f64> for [f64] {
 
 fn handle_rank_ties(
     ranks: &mut [f64],
-    index: &[usize],
-    a: isize,
-    b: isize,
+    index: &[(usize, &f64)],
+    a: usize,
+    b: usize,
     tie_breaker: RankTieBreaker,
 ) {
     let rank = match tie_breaker {
-        RankTieBreaker::Average => (b + a - 1) as f64 / 2.0 + 1.0,
+        // equivalent to (b + a - 1) as f64 / 2.0 + 1.0 but less overflow issues
+        RankTieBreaker::Average => b as f64 / 2.0 + a as f64 / 2.0 + 0.5,
         RankTieBreaker::Min => (a + 1) as f64,
         RankTieBreaker::Max => b as f64,
         RankTieBreaker::First => unreachable!(),
     };
-    unsafe {
-        for i in a..b {
-            ranks[*index.get_unchecked(i as usize)] = rank
-        }
+    for i in &index[a..b] {
+        ranks[i.0] = rank
     }
 }
 
@@ -364,234 +353,6 @@ fn select_inplace(arr: &mut [f64], rank: usize) -> f64 {
             }
             if end <= rank {
                 low = begin;
-            }
-        }
-    }
-}
-
-// sorts a primary slice and re-orders the secondary slice automatically. Uses
-// insertion sort on small
-// containers and quick sorts for larger ones
-fn sort(primary: &mut [f64], secondary: &mut [usize]) {
-    assert_eq!(
-        primary.len(),
-        secondary.len(),
-        "{}",
-        StatsError::ContainersMustBeSameLength
-    );
-
-    let n = primary.len();
-    if n <= 1 {
-        return;
-    }
-    if n == 2 {
-        unsafe {
-            if *primary.get_unchecked(0) > *primary.get_unchecked(1) {
-                primary.swap(0, 1);
-                secondary.swap(0, 1);
-            }
-            return;
-        }
-    }
-
-    // insertion sort for really short containers
-    if n <= 10 {
-        unsafe {
-            for i in 1..n {
-                let key = *primary.get_unchecked(i);
-                let item = *secondary.get_unchecked(i);
-                let mut j = i as isize - 1;
-                while j >= 0 && *primary.get_unchecked(j as usize) > key {
-                    primary[j as usize + 1] = *primary.get_unchecked(j as usize);
-                    secondary[j as usize + 1] = *secondary.get_unchecked(j as usize);
-                    j -= 1;
-                }
-                primary[j as usize + 1] = key;
-                secondary[j as usize + 1] = item;
-            }
-            return;
-        }
-    }
-
-    quick_sort(primary, secondary, 0, n - 1);
-}
-
-// quick sorts a primary slice and re-orders the secondary slice automatically
-fn quick_sort(primary: &mut [f64], secondary: &mut [usize], left: usize, right: usize) {
-    assert_eq!(
-        primary.len(),
-        secondary.len(),
-        "{}",
-        StatsError::ContainersMustBeSameLength
-    );
-
-    // shadow left and right for mutability in loop
-    let mut left = left;
-    let mut right = right;
-
-    unsafe {
-        loop {
-            // Pivoting
-            let mut a = left;
-            let mut b = right;
-            let p = a + ((b - a) >> 1);
-
-            if *primary.get_unchecked(a) > *primary.get_unchecked(p) {
-                primary.swap(a, p);
-                secondary.swap(a, p);
-            }
-            if *primary.get_unchecked(a) > *primary.get_unchecked(b) {
-                primary.swap(a, b);
-                secondary.swap(a, b);
-            }
-            if *primary.get_unchecked(p) > *primary.get_unchecked(b) {
-                primary.swap(p, b);
-                secondary.swap(p, b);
-            }
-
-            let pivot = *primary.get_unchecked(p);
-
-            // Hoare partitioning
-            loop {
-                while *primary.get_unchecked(a) < pivot {
-                    a += 1;
-                }
-                while pivot < *primary.get_unchecked(b) {
-                    b -= 1;
-                }
-                if a > b {
-                    break;
-                }
-                if a < b {
-                    primary.swap(a, b);
-                    secondary.swap(a, b);
-                }
-
-                a += 1;
-                b -= 1;
-
-                if a > b {
-                    break;
-                }
-            }
-
-            // In order to limit recursion depth to log(n), sort the shorter
-            // partition recursively and the longer partition iteratively.
-            //
-            // Must cast to isize as it's possible for left > b or a > right/
-            // TODO: make this more robust
-            if (b as isize - left as isize) <= (right as isize - a as isize) {
-                if left < b {
-                    quick_sort(primary, secondary, left, b);
-                }
-                left = a;
-            } else {
-                if a < right {
-                    quick_sort(primary, secondary, a, right);
-                }
-                right = b;
-            }
-
-            if left >= right {
-                break;
-            }
-        }
-    }
-}
-
-// quick sorts a primary slice and re-orders the secondary slice automatically.
-// Sorts secondarily by the secondary slice on primary key duplicates
-fn quick_sort_all(primary: &mut [f64], secondary: &mut [usize], left: usize, right: usize) {
-    assert_eq!(
-        primary.len(),
-        secondary.len(),
-        "{}",
-        StatsError::ContainersMustBeSameLength
-    );
-
-    // shadow left and right for mutability in loop
-    let mut left = left;
-    let mut right = right;
-
-    unsafe {
-        loop {
-            // Pivoting
-            let mut a = left;
-            let mut b = right;
-            let p = a + ((b - a) >> 1);
-
-            if *primary.get_unchecked(a) > *primary.get_unchecked(p)
-                || *primary.get_unchecked(a) == *primary.get_unchecked(p)
-                    && *secondary.get_unchecked(a) > *secondary.get_unchecked(p)
-            {
-                primary.swap(a, p);
-                secondary.swap(a, p);
-            }
-            if *primary.get_unchecked(a) > *primary.get_unchecked(b)
-                || *primary.get_unchecked(a) == *primary.get_unchecked(b)
-                    && *secondary.get_unchecked(a) > *secondary.get_unchecked(b)
-            {
-                primary.swap(a, b);
-                secondary.swap(a, b);
-            }
-            if *primary.get_unchecked(p) > *primary.get_unchecked(b)
-                || *primary.get_unchecked(p) == *primary.get_unchecked(b)
-                    && *secondary.get_unchecked(p) > *secondary.get_unchecked(b)
-            {
-                primary.swap(p, b);
-                secondary.swap(p, b);
-            }
-
-            let pivot1 = *primary.get_unchecked(p);
-            let pivot2 = *secondary.get_unchecked(p);
-
-            // Hoare partitioning
-            loop {
-                while *primary.get_unchecked(a) < pivot1
-                    || *primary.get_unchecked(a) == pivot1 && *secondary.get_unchecked(a) < pivot2
-                {
-                    a += 1;
-                }
-                while pivot1 < *primary.get_unchecked(b)
-                    || pivot1 == *primary.get_unchecked(b) && pivot2 < *secondary.get_unchecked(b)
-                {
-                    b -= 1;
-                }
-                if a > b {
-                    break;
-                }
-                if a < b {
-                    primary.swap(a, b);
-                    secondary.swap(a, b);
-                }
-
-                a += 1;
-                b -= 1;
-
-                if a > b {
-                    break;
-                }
-            }
-
-            // In order to limit recursion depth to log(n), sort the shorter
-            // partition recursively and the longer partition iteratively.
-            //
-            // Must cast to isize as it's possible for left > b or a > right/
-            // TODO: make this more robust
-            if (b as isize - left as isize) <= (right as isize - a as isize) {
-                if left < b {
-                    quick_sort_all(primary, secondary, left, b);
-                }
-                left = a;
-            } else {
-                if a < right {
-                    quick_sort_all(primary, secondary, a, right);
-                }
-                right = b;
-            }
-
-            if left >= right {
-                break;
             }
         }
     }

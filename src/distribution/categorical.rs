@@ -62,16 +62,11 @@ impl Categorical {
             // extract normalized probability mass
             let sum = cdf[cdf.len() - 1];
             let mut norm_pmf = vec![0.0; prob_mass.len()];
-            for i in 0..prob_mass.len() {
-                unsafe {
-                    let elem = norm_pmf.get_unchecked_mut(i);
-                    *elem = prob_mass.get_unchecked(i) / sum;
-                }
-            }
-            Ok(Categorical {
-                norm_pmf: norm_pmf,
-                cdf: cdf,
-            })
+            norm_pmf
+                .iter_mut()
+                .zip(prob_mass.iter())
+                .for_each(|(np, pm)| *np = *pm / sum);
+            Ok(Categorical { norm_pmf, cdf })
         }
     }
 
@@ -293,11 +288,7 @@ impl Discrete<u64, f64> for Categorical {
     /// p_x
     /// ```
     fn pmf(&self, x: u64) -> f64 {
-        if x >= self.norm_pmf.len() as u64 {
-            0.0
-        } else {
-            unsafe { *self.norm_pmf.get_unchecked(x as usize) }
-        }
+        *self.norm_pmf.get(x as usize).unwrap_or(&0.0)
     }
 
     /// Calculates the log probability mass function for the categorical
@@ -311,38 +302,22 @@ impl Discrete<u64, f64> for Categorical {
 /// without doing any bounds checking
 pub fn sample_unchecked<R: Rng + ?Sized>(r: &mut R, cdf: &[f64]) -> f64 {
     let draw = r.gen::<f64>() * unsafe { cdf.get_unchecked(cdf.len() - 1) };
-    let mut idx = 0;
-
-    if draw == 0.0 {
-        // skip zero-probability categories
-        let mut el = unsafe { cdf.get_unchecked(idx) };
-        while *el == 0.0 {
-            // don't need bounds checking because we do not allow
-            // creating Categorical distributions with all 0.0 probs
-            idx += 1;
-            el = unsafe { cdf.get_unchecked(idx) }
-        }
-    }
-    let mut el = unsafe { cdf.get_unchecked(idx) };
-    while draw > *el {
-        idx += 1;
-        el = unsafe { cdf.get_unchecked(idx) };
-    }
-    idx as f64
+    cdf.iter()
+        .enumerate()
+        .find(|(_, val)| **val >= draw)
+        .map(|(i, _)| i)
+        .unwrap() as f64
 }
 
 /// Computes the cdf from the given probability masses. Performs
 /// no parameter or bounds checking.
 pub fn prob_mass_to_cdf(prob_mass: &[f64]) -> Vec<f64> {
-    let mut cdf = vec![0.0; prob_mass.len()];
-    cdf[0] = prob_mass[0];
-    for i in 1..prob_mass.len() {
-        unsafe {
-            let val = cdf.get_unchecked(i - 1) + prob_mass.get_unchecked(i);
-            let elem = cdf.get_unchecked_mut(i);
-            *elem = val;
-        }
-    }
+    let mut cdf = Vec::with_capacity(prob_mass.len());
+    prob_mass.iter().fold(0.0, |s, p| {
+        let sum = s + p;
+        cdf.push(sum);
+        sum
+    });
     cdf
 }
 

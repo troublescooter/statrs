@@ -54,10 +54,7 @@ impl Multinomial {
         if !super::internal::is_valid_multinomial(p, true) {
             Err(StatsError::BadParams)
         } else {
-            Ok(Multinomial {
-                p: p.to_vec(),
-                n: n,
-            })
+            Ok(Multinomial { p: p.to_vec(), n })
         }
     }
 
