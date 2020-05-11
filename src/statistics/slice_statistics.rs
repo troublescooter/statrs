@@ -1,4 +1,3 @@
-use crate::error::StatsError;
 use crate::statistics::*;
 use std::f64;
 
