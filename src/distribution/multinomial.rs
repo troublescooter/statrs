@@ -95,8 +95,8 @@ impl Distribution<Vec<f64>> for Multinomial {
         let mut res = vec![0.0; self.p.len()];
         for _ in 0..self.n {
             let i = super::categorical::sample_unchecked(r, &p_cdf);
-            let el = unsafe { res.get_unchecked_mut(i as usize) };
-            *el = *el + 1.0;
+            let el = res.get_mut(i as usize).unwrap();
+            *el += 1.0;
         }
         res
     }

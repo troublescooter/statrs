@@ -298,61 +298,59 @@ fn select_inplace(arr: &mut [f64], rank: usize) -> f64 {
         return arr.max();
     }
 
-    unsafe {
-        let mut low = 0;
-        let mut high = arr.len() - 1;
+    let mut low = 0;
+    let mut high = arr.len() - 1;
+    loop {
+        if high <= low + 1 {
+            if high == low + 1 && arr[high] < arr[low] {
+                arr.swap(low, high)
+            }
+            return arr[rank];
+        }
+
+        let middle = (low + high) / 2;
+        arr.swap(middle, low + 1);
+
+        if arr[low] > arr[high] {
+            arr.swap(low, high);
+        }
+        if arr[low + 1] > arr[high] {
+            arr.swap(low + 1, high);
+        }
+        if arr[low] > arr[low + 1] {
+            arr.swap(low, low + 1);
+        }
+
+        let mut begin = low + 1;
+        let mut end = high;
+        let pivot = arr[begin];
         loop {
-            if high <= low + 1 {
-                if high == low + 1 && *arr.get_unchecked(high) < *arr.get_unchecked(low) {
-                    arr.swap(low, high)
-                }
-                return *arr.get_unchecked(rank);
-            }
-
-            let middle = (low + high) >> 1;
-            arr.swap(middle, low + 1);
-
-            if *arr.get_unchecked(low) > *arr.get_unchecked(high) {
-                arr.swap(low, high);
-            }
-            if *arr.get_unchecked(low + 1) > *arr.get_unchecked(high) {
-                arr.swap(low + 1, high);
-            }
-            if *arr.get_unchecked(low) > *arr.get_unchecked(low + 1) {
-                arr.swap(low, low + 1);
-            }
-
-            let mut begin = low + 1;
-            let mut end = high;
-            let pivot = *arr.get_unchecked(begin);
             loop {
-                loop {
-                    begin += 1;
-                    if *arr.get_unchecked(begin) >= pivot {
-                        break;
-                    }
-                }
-                loop {
-                    end -= 1;
-                    if *arr.get_unchecked(end) <= pivot {
-                        break;
-                    }
-                }
-                if end < begin {
+                begin += 1;
+                if arr[begin] >= pivot {
                     break;
                 }
-                arr.swap(begin, end);
             }
+            loop {
+                end -= 1;
+                if arr[end] <= pivot {
+                    break;
+                }
+            }
+            if end < begin {
+                break;
+            }
+            arr.swap(begin, end);
+        }
 
-            arr[low + 1] = *arr.get_unchecked(end);
-            arr[end] = pivot;
+        arr[low + 1] = arr[end];
+        arr[end] = pivot;
 
-            if end >= rank {
-                high = end - 1;
-            }
-            if end <= rank {
-                low = begin;
-            }
+        if end >= rank {
+            high = end - 1;
+        }
+        if end <= rank {
+            low = begin;
         }
     }
 }

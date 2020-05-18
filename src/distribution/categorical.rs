@@ -71,7 +71,7 @@ impl Categorical {
     }
 
     fn cdf_max(&self) -> f64 {
-        *unsafe { self.cdf.get_unchecked(self.cdf.len() - 1) }
+        *self.cdf.last().unwrap()
     }
 }
 
@@ -98,7 +98,7 @@ impl Univariate<u64, f64> for Categorical {
         } else if x >= self.cdf.len() as f64 {
             1.0
         } else {
-            unsafe { self.cdf.get_unchecked(x as usize) / self.cdf_max() }
+            self.cdf.get(x as usize).unwrap() / self.cdf_max()
         }
     }
 }
@@ -301,7 +301,7 @@ impl Discrete<u64, f64> for Categorical {
 /// Draws a sample from the categorical distribution described by `cdf`
 /// without doing any bounds checking
 pub fn sample_unchecked<R: Rng + ?Sized>(r: &mut R, cdf: &[f64]) -> f64 {
-    let draw = r.gen::<f64>() * unsafe { cdf.get_unchecked(cdf.len() - 1) };
+    let draw = r.gen::<f64>() * cdf.last().unwrap();
     cdf.iter()
         .enumerate()
         .find(|(_, val)| **val >= draw)
@@ -333,7 +333,7 @@ fn binary_index(search: &[f64], val: f64) -> usize {
     let mut high = search.len() as isize - 1;
     while low <= high {
         let mid = low + ((high - low) / 2);
-        let el = *unsafe { search.get_unchecked(mid as usize) };
+        let el = *search.get(mid as usize).unwrap();
         if el > val {
             high = mid - 1;
         } else if el < val {
