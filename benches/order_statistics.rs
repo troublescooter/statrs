@@ -2,8 +2,6 @@ extern crate rand;
 extern crate statrs;
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 use rand::prelude::*;
-// use statrs::distribution::Categorical;
-// use statrs::distribution::InverseCDF;
 use statrs::statistics::*;
 
 fn bench_order_statistic(c: &mut Criterion) {
@@ -90,27 +88,6 @@ fn bench_order_statistic(c: &mut Criterion) {
     });
     group.finish();
 }
-
-// fn bench_categorical_distribution(c: &mut Criterion) {
-//     c.bench_function("new categorical distribution", |b| {
-//         b.iter_batched(
-//             || rand_vec(100),
-//             |slice| Categorical::new(&slice),
-//             BatchSize::SmallInput,
-//         )
-//     });
-// }
-
-// fn categorical_distribution_inverse_cdf(c: &mut Criterion) {
-//     let x = black_box(5.0);
-//     c.bench_function("inverse_cdf", |b| {
-//         b.iter_batched(
-//             || Categorical::new(&rand_vec(100)).unwrap(),
-//             |categorical| categorical.inverse_cdf(x),
-//             BatchSize::SmallInput,
-//         )
-//     });
-// }
 
 criterion_group!(benches, bench_order_statistic);
 criterion_main!(benches);
