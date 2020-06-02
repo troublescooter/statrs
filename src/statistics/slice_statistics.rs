@@ -61,7 +61,7 @@ impl OrderStatistics<f64> for [f64] {
         let n = self.len();
         let mut ranks: Vec<f64> = vec![0.0; n];
         let mut enumerated: Vec<_> = self.iter().enumerate().collect();
-        enumerated.sort_by(|fst, snd| fst.1.partial_cmp(&snd.1).unwrap());
+        enumerated.sort_by(|(_, el_a), (_, el_b)| el_a.partial_cmp(el_b).unwrap());
         match tie_breaker {
             RankTieBreaker::First => {
                 for (i, idx) in enumerated.into_iter().map(|(idx, _)| idx).enumerate() {
