@@ -136,8 +136,8 @@ impl Min<f64> for FisherSnedecor {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> Option<f64> {
-        Some(0.0)
+    fn min(&self) -> f64 {
+        0.0
     }
 }
 
@@ -151,8 +151,8 @@ impl Max<f64> for FisherSnedecor {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> Option<f64> {
-        None
+    fn max(&self) -> f64 {
+        f64::INFINITY
     }
 }
 
@@ -250,7 +250,7 @@ impl Skewness<f64> for FisherSnedecor {
     }
 }
 
-impl Mode<f64> for FisherSnedecor {
+impl Mode<Option<f64>> for FisherSnedecor {
     /// Returns the mode for the fisher-snedecor distribution
     ///
     /// # Panics

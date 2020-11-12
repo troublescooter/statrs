@@ -144,8 +144,8 @@ impl Min<f64> for Beta {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> Option<f64> {
-        Some(0.0)
+    fn min(&self) -> f64 {
+        0.0
     }
 }
 
@@ -159,8 +159,8 @@ impl Max<f64> for Beta {
     /// ```ignore
     /// 1
     /// ```
-    fn max(&self) -> Option<f64> {
-        Some(1.0)
+    fn max(&self) -> f64 {
+        1.0
     }
 }
 
@@ -265,7 +265,7 @@ impl Skewness<f64> for Beta {
     }
 }
 
-impl Mode<f64> for Beta {
+impl Mode<Option<f64>> for Beta {
     /// Returns the mode of the Beta distribution.
     ///
     /// # Remarks

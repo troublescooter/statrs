@@ -110,8 +110,8 @@ impl Min<u64> for Geometric {
     /// ```ignore
     /// 1
     /// ```
-    fn min(&self) -> Option<u64> {
-        Some(1)
+    fn min(&self) -> u64 {
+        1
     }
 }
 
@@ -125,8 +125,8 @@ impl Max<u64> for Geometric {
     /// ```ignore
     /// 2^63 - 1
     /// ```
-    fn max(&self) -> Option<u64> {
-        None
+    fn max(&self) -> u64 {
+        u64::MAX
     }
 }
 
@@ -166,7 +166,7 @@ impl Entropy<f64> for Geometric {
     /// ```
     fn entropy(&self) -> Option<f64> {
         let inv = 1.0 / self.p;
-        Some(-inv * (1. - self.p).log(2.0) + (inv - 1).log(2.0))
+        Some(-inv * (1. - self.p).log(2.0) + (inv - 1.).log(2.0))
     }
 }
 
@@ -186,7 +186,7 @@ impl Skewness<f64> for Geometric {
     }
 }
 
-impl Mode<u64> for Geometric {
+impl Mode<Option<u64>> for Geometric {
     /// Returns the mode of the geometric distribution
     ///
     /// # Formula
@@ -209,11 +209,11 @@ impl Median<f64> for Geometric {
     /// ```ignore
     /// ceil(-1 / log_2(1 - p))
     /// ```
-    fn median(&self) -> Option<f64> {
+    fn median(&self) -> f64 {
         if ulps_eq!(self.p, 1.0) {
-            return None;
+            return f64::INFINITY;
         };
-        Some((-f64::consts::LN_2 / (1.0 - self.p).ln()).ceil())
+        (-f64::consts::LN_2 / (1.0 - self.p).ln()).ceil()
     }
 }
 

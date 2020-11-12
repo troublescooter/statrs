@@ -158,7 +158,7 @@ impl Mean<f64> for Weibull {
     /// where `k` is the shape, `λ` is the scale, and `Γ` is
     /// the gamma function
     fn mean(&self) -> Option<f64> {
-        self.scale * gamma::gamma(1.0 + 1.0 / self.shape)
+        Some(self.scale * gamma::gamma(1.0 + 1.0 / self.shape))
     }
 }
 
@@ -174,10 +174,8 @@ impl Variance<f64> for Weibull {
     /// where `k` is the shape, `λ` is the scale, and `Γ` is
     /// the gamma function
     fn variance(&self) -> Option<f64> {
-        Some(
-            self.scale * self.scale * gamma::gamma(1.0 + 2.0 / self.shape)
-                - self.mean() * self.mean(),
-        )
+        let mean = self.mean()?;
+        Some(self.scale * self.scale * gamma::gamma(1.0 + 2.0 / self.shape) - mean * mean)
     }
 }
 
@@ -213,8 +211,8 @@ impl Skewness<f64> for Weibull {
     /// the gamma function, `μ` is the mean of the distribution.
     /// and `σ` the standard deviation of the distribution
     fn skewness(&self) -> Option<f64> {
-        let mu = self.mean();
-        let sigma = self.std_dev();
+        let mu = self.mean()?;
+        let sigma = self.std_dev()?;
         let sigma2 = sigma * sigma;
         let sigma3 = sigma2 * sigma;
         let skew = (self.scale * self.scale * self.scale * gamma::gamma(1.0 + 3.0 / self.shape)

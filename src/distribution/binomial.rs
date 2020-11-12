@@ -135,7 +135,7 @@ impl Min<u64> for Binomial {
     /// 0
     /// ```
     fn min(&self) -> u64 {
-        Some(0)
+        0
     }
 }
 
@@ -150,7 +150,7 @@ impl Max<u64> for Binomial {
     /// n
     /// ```
     fn max(&self) -> u64 {
-        Some(self.n)
+        self.n
     }
 }
 
@@ -162,7 +162,7 @@ impl Mean<f64> for Binomial {
     /// ```ignore
     /// p * n
     /// ```
-    fn mean(&self) -> f64 {
+    fn mean(&self) -> Option<f64> {
         Some(self.p * self.n as f64)
     }
 }
@@ -175,7 +175,7 @@ impl Variance<f64> for Binomial {
     /// ```ignore
     /// n * p * (1 - p)
     /// ```
-    fn variance(&self) -> f64 {
+    fn variance(&self) -> Option<f64> {
         Some(self.p * (1.0 - self.p) * self.n as f64)
     }
 }
@@ -222,12 +222,12 @@ impl Median<f64> for Binomial {
     /// ```ignore
     /// floor(n * p)
     /// ```
-    fn median(&self) -> Option<f64> {
-        Some((self.p * self.n as f64).floor())
+    fn median(&self) -> f64 {
+        (self.p * self.n as f64).floor()
     }
 }
 
-impl Mode<u64> for Binomial {
+impl Mode<Option<u64>> for Binomial {
     /// Returns the mode for the binomial distribution
     ///
     /// # Formula

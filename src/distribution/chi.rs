@@ -111,8 +111,8 @@ impl Min<f64> for Chi {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> Option<f64> {
-        Some(0.0)
+    fn min(&self) -> f64 {
+        0.0
     }
 }
 
@@ -125,8 +125,8 @@ impl Max<f64> for Chi {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> Option<f64> {
-        None
+    fn max(&self) -> f64 {
+        f64::INFINITY
     }
 }
 
@@ -219,11 +219,12 @@ impl Skewness<f64> for Chi {
     /// of the distribution
     fn skewness(&self) -> Option<f64> {
         let sigma = self.std_dev()?;
-        self.mean() * (1.0 - 2.0 * sigma * sigma) / (sigma * sigma * sigma)
+        let skew = self.mean()? * (1.0 - 2.0 * sigma * sigma) / (sigma * sigma * sigma);
+        Some(skew)
     }
 }
 
-impl Mode<f64> for Chi {
+impl Mode<Option<f64>> for Chi {
     /// Returns the mode for the chi distribution
     ///
     /// # Panics

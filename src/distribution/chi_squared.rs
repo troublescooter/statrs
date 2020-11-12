@@ -130,8 +130,8 @@ impl Min<f64> for ChiSquared {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> Option<f64> {
-        Some(0.0)
+    fn min(&self) -> f64 {
+        0.0
     }
 }
 
@@ -145,8 +145,8 @@ impl Max<f64> for ChiSquared {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> Option<f64> {
-        None
+    fn max(&self) -> f64 {
+        f64::INFINITY
     }
 }
 
@@ -219,7 +219,7 @@ impl Median<f64> for ChiSquared {
     /// ```ignore
     /// k * (1 - (2 / 9k))^3
     /// ```
-    fn median(&self) -> Option<f64> {
+    fn median(&self) -> f64 {
         let median = if self.freedom < 1.0 {
             // if k is small, calculate using expansion of formula
             self.freedom - 2.0 / 3.0 + 12.0 / (81.0 * self.freedom)
@@ -228,11 +228,11 @@ impl Median<f64> for ChiSquared {
             // if k is large enough, median heads toward k - 2/3
             self.freedom - 2.0 / 3.0
         };
-        Some(median)
+        median
     }
 }
 
-impl Mode<f64> for ChiSquared {
+impl Mode<Option<f64>> for ChiSquared {
     /// Returns the mode of the chi-squared distribution
     ///
     /// # Formula

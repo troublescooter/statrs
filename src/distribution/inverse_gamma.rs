@@ -128,8 +128,8 @@ impl Min<f64> for InverseGamma {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> Option<f64> {
-        Some(0.0)
+    fn min(&self) -> f64 {
+        0.0
     }
 }
 
@@ -143,8 +143,8 @@ impl Max<f64> for InverseGamma {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> Option<f64> {
-        None
+    fn max(&self) -> f64 {
+        f64::INFINITY
     }
 }
 
@@ -237,7 +237,7 @@ impl Skewness<f64> for InverseGamma {
     }
 }
 
-impl Mode<f64> for InverseGamma {
+impl Mode<Option<f64>> for InverseGamma {
     /// Returns the mode of the inverse gamma distribution
     ///
     /// # Formula

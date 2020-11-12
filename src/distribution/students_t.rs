@@ -312,7 +312,7 @@ impl Mode<Option<f64>> for StudentsT {
     ///
     /// where `μ` is the location
     fn mode(&self) -> Option<f64> {
-        self.location
+        Some(self.location)
     }
 }
 

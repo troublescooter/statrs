@@ -78,7 +78,7 @@ impl Min<f64> for Dirac {
     /// ```ignore
     /// v
     /// ```
-    fn min(&self) -> Option<f64> {
+    fn min(&self) -> f64 {
         self.0
     }
 }
@@ -92,7 +92,7 @@ impl Max<f64> for Dirac {
     /// ```ignore
     /// v
     /// ```
-    fn max(&self) -> Option<f64> {
+    fn max(&self) -> f64 {
         self.0
     }
 }
@@ -162,12 +162,12 @@ impl Median<f64> for Dirac {
     /// ```
     ///
     /// where `v` is the point of the dirac distribution
-    fn median(&self) -> Option<f64> {
-        Some(self.0)
+    fn median(&self) -> f64 {
+        self.0
     }
 }
 
-impl Mode<f64> for Dirac {
+impl Mode<Option<f64>> for Dirac {
     /// Returns the mode of the dirac distribution
     ///
     /// # Formula

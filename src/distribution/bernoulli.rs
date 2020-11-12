@@ -113,8 +113,8 @@ impl Min<u64> for Bernoulli {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> Option<u64> {
-        Some(0)
+    fn min(&self) -> u64 {
+        0
     }
 }
 
@@ -128,8 +128,8 @@ impl Max<u64> for Bernoulli {
     /// ```ignore
     /// 1
     /// ```
-    fn max(&self) -> Option<u64> {
-        Some(1)
+    fn max(&self) -> u64 {
+        1
     }
 }
 
@@ -207,7 +207,7 @@ impl Median<f64> for Bernoulli {
     }
 }
 
-impl Mode<u64> for Bernoulli {
+impl Mode<Option<u64>> for Bernoulli {
     /// Returns the mode of the bernoulli distribution
     ///
     /// # Formula

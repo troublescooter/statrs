@@ -108,7 +108,6 @@ where
     DefaultAllocator: Allocator<f64, N, N>,
     DefaultAllocator: Allocator<f64, U1, N>,
     DefaultAllocator: Allocator<(usize, usize), <N as DimMin<N>>::Output>,
-    // T: std::fmt::Debug + Copy + PartialEq + std::ops::Mul,
 {
     fn variance(&self) -> MatrixN<f64, N>;
 }
@@ -178,5 +177,5 @@ pub trait Mode<T> {
     /// let n = Uniform::new(0.0, 1.0).unwrap();
     /// assert_eq!(Some(0.5), n.mode());
     /// ```
-    fn mode(&self) -> Option<T>;
+    fn mode(&self) -> T;
 }

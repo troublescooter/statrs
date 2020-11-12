@@ -124,8 +124,8 @@ impl Mean<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location and `σ` is the scale
-    fn mean(&self) -> f64 {
-        (self.location + self.scale * self.scale / 2.0).exp()
+    fn mean(&self) -> Option<f64> {
+        Some((self.location + self.scale * self.scale / 2.0).exp())
     }
 }
 
@@ -186,12 +186,12 @@ impl Median<f64> for LogNormal {
     /// ```
     ///
     /// where `μ` is the location
-    fn median(&self) -> Option<f64> {
-        Some(self.location.exp())
+    fn median(&self) -> f64 {
+        self.location.exp()
     }
 }
 
-impl Mode<f64> for LogNormal {
+impl Mode<Option<f64>> for LogNormal {
     /// Returns the mode of the log-normal distribution
     ///
     /// # Formula

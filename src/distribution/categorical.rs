@@ -164,8 +164,8 @@ impl Min<u64> for Categorical {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> Option<u64> {
-        Some(0)
+    fn min(&self) -> u64 {
+        0
     }
 }
 
@@ -179,8 +179,8 @@ impl Max<u64> for Categorical {
     /// ```ignore
     /// n
     /// ```
-    fn max(&self) -> Option<u64> {
-        Some(self.cdf.len() as u64 - 1)
+    fn max(&self) -> u64 {
+        self.cdf.len() as u64 - 1
     }
 }
 
@@ -263,8 +263,8 @@ impl Median<f64> for Categorical {
     /// ```ignore
     /// CDF^-1(0.5)
     /// ```
-    fn median(&self) -> Option<f64> {
-        Some(self.inverse_cdf(0.5))
+    fn median(&self) -> f64 {
+        self.inverse_cdf(0.5)
     }
 }
 

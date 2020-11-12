@@ -111,8 +111,8 @@ impl Min<f64> for Cauchy {
     /// ```ignore
     /// NEG_INF
     /// ```
-    fn min(&self) -> Option<f64> {
-        None
+    fn min(&self) -> f64 {
+        f64::NEG_INFINITY
     }
 }
 
@@ -125,8 +125,8 @@ impl Max<f64> for Cauchy {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> Option<f64> {
-        None
+    fn max(&self) -> f64 {
+        f64::INFINITY
     }
 }
 
@@ -155,12 +155,12 @@ impl Median<f64> for Cauchy {
     /// ```
     ///
     /// where `x_0` is the location
-    fn median(&self) -> Option<f64> {
-        Some(self.location)
+    fn median(&self) -> f64 {
+        self.location
     }
 }
 
-impl Mode<f64> for Cauchy {
+impl Mode<Option<f64>> for Cauchy {
     /// Returns the mode of the cauchy distribution
     ///
     /// # Formula

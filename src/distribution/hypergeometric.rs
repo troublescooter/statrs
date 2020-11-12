@@ -265,7 +265,7 @@ impl Skewness<f64> for Hypergeometric {
     /// ```
     ///
     /// where `N` is population, `K` is successes, and `n` is draws
-    fn skewness(&self) -> Result<f64> {
+    fn skewness(&self) -> Option<f64> {
         if self.population <= 2 {
             None
         } else {
@@ -280,7 +280,7 @@ impl Skewness<f64> for Hypergeometric {
     }
 }
 
-impl Mode<u64> for Hypergeometric {
+impl Mode<Option<u64>> for Hypergeometric {
     /// Returns the mode of the hypergeometric distribution
     ///
     /// # Formula
@@ -291,7 +291,7 @@ impl Mode<u64> for Hypergeometric {
     ///
     /// where `N` is population, `K` is successes, and `n` is draws
     fn mode(&self) -> Option<u64> {
-        Some(((self.draws + 1) * (self.successes + 1) / (self.population + 2)).floor() as u64)
+        Some(((self.draws + 1) * (self.successes + 1)) / (self.population + 2))
     }
 }
 

@@ -193,7 +193,7 @@ impl Entropy<f64> for Dirichlet {
     /// `K` is the number of concentration parameters, `ψ` is the digamma
     /// function, `α_i`
     /// is the `i`th concentration parameter, and `Σ` is the sum from `1` to `K`
-    fn entropy(&self) -> f64 {
+    fn entropy(&self) -> Option<f64> {
         let sum = self.alpha_sum();
         let num = self.alpha.iter().fold(0.0, |acc, &x| {
             acc + gamma::ln_gamma(x) + (x - 1.0) * gamma::digamma(x)

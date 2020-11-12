@@ -18,7 +18,7 @@ use std::u64;
 /// use statrs::prec;
 ///
 /// let n = Poisson::new(1.0).unwrap();
-/// assert_eq!(n.mean(), 1.0);
+/// assert_eq!(n.mean(), Some(1.0));
 /// assert!(prec::almost_eq(n.pmf(1), 0.367879441171442, 1e-15));
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -134,8 +134,8 @@ impl Mean<f64> for Poisson {
     /// ```
     ///
     /// where `λ` is the rate
-    fn mean(&self) -> f64 {
-        self.lambda
+    fn mean(&self) -> Option<f64> {
+        Some(self.lambda)
     }
 }
 
@@ -149,8 +149,8 @@ impl Variance<f64> for Poisson {
     /// ```
     ///
     /// where `λ` is the rate
-    fn variance(&self) -> f64 {
-        self.lambda
+    fn variance(&self) -> Option<f64> {
+        Some(self.lambda)
     }
 }
 
