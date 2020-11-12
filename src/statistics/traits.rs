@@ -1,5 +1,8 @@
-use crate::Result;
-
+use nalgebra::{
+    base::allocator::Allocator,
+    base::{dimension::DimName, MatrixN, VectorN},
+    DefaultAllocator, Dim, DimMin, U1,
+};
 /// The `Min` trait specifies than an object has a minimum value
 pub trait Min<T> {
     /// Returns the minimum value in the domain of a given distribution
@@ -31,7 +34,7 @@ pub trait Max<T> {
     /// let n = Uniform::new(0.0, 1.0).unwrap();
     /// assert_eq!(Some(1.0), n.max());
     /// ```
-    fn max(&self) -> Option<T>;
+    fn max(&self) -> T;
 }
 
 /// The `Mean` trait specifies that an object has a closed form
@@ -51,47 +54,25 @@ pub trait Mean<T> {
     fn mean(&self) -> Option<T>;
 }
 
-pub trait StdDev<T>: Mean<T> {
-    /// Returns the standard deviation, if it exists.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use statrs::statistics::Variance;
-    /// use statrs::distribution::Uniform;
-    ///
-    /// let n = Uniform::new(0.0, 1.0).unwrap();
-    /// assert_eq!(Some((1f64 / 12f64).sqrt()), n.std_dev());
-    /// ```
-    fn std_dev(&self) -> Option<T>;
-}
-
-impl<T, U> StdDev<T> for U
+/// The `MeanN` trait is the multivariable version of the `Mean` trait.
+pub trait MeanN<N>
 where
-    U: Variance<T>,
-    T: num_traits::float::Float,
+    N: Dim + DimMin<N, Output = N> + DimName,
+    DefaultAllocator: Allocator<f64, N>,
+    DefaultAllocator: Allocator<f64, N, N>,
+    DefaultAllocator: Allocator<f64, U1, N>,
+    DefaultAllocator: Allocator<(usize, usize), <N as DimMin<N>>::Output>,
 {
-    fn std_dev(&self) -> Option<T> {
-        self.variance().map(|x| x.sqrt())
-    }
-}
-
-impl<T, U> StdDev<Vec<T>> for U
-where
-    U: Variance<Vec<T>>,
-    T: num_traits::float::Float,
-{
-    fn std_dev(&self) -> Option<Vec<T>> {
-        let mut var = self.variance();
-        var.map(|x| x.iter_mut().map(|v| *v = v.sqrt()).for_each(|_| {}));
-        var
-    }
+    fn mean(&self) -> VectorN<f64, N>;
 }
 
 /// The `Variance` trait specifies that an object has a closed form solution for
 /// its variance(s). Requires `Mean` since a closed form solution to
 /// variance by definition requires a closed form mean.
-pub trait Variance<T>: Mean<T> {
+pub trait Variance<T>: Mean<T>
+where
+    T: num_traits::Float,
+{
     /// Returns the variance, if it exists.
     ///
     /// # Examples
@@ -104,10 +85,32 @@ pub trait Variance<T>: Mean<T> {
     /// assert_eq!(Some(1.0 / 12.0), n.variance());
     /// ```
     fn variance(&self) -> Option<T>;
+    /// Returns the standard deviation, if it exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use statrs::statistics::Variance;
+    /// use statrs::distribution::Uniform;
+    ///
+    /// let n = Uniform::new(0.0, 1.0).unwrap();
+    /// assert_eq!(Some((1f64 / 12f64).sqrt()), n.std_dev());
+    /// ```
+    fn std_dev(&self) -> Option<T> {
+        self.variance().map(|var| var.sqrt())
+    }
 }
 
-pub trait Covariance<T> {
-    fn variance(&self) -> T;
+pub trait Covariance<N>: MeanN<N>
+where
+    N: Dim + DimMin<N, Output = N> + DimName,
+    DefaultAllocator: Allocator<f64, N>,
+    DefaultAllocator: Allocator<f64, N, N>,
+    DefaultAllocator: Allocator<f64, U1, N>,
+    DefaultAllocator: Allocator<(usize, usize), <N as DimMin<N>>::Output>,
+    // T: std::fmt::Debug + Copy + PartialEq + std::ops::Mul,
+{
+    fn variance(&self) -> MatrixN<f64, N>;
 }
 
 /// The `Entropy` trait specifies an object that has a closed form solution

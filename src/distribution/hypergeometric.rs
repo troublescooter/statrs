@@ -215,30 +215,11 @@ impl Mean<f64> for Hypergeometric {
     /// ```
     ///
     /// where `N` is population, `K` is successes, and `n` is draws
-    fn mean(&self) -> f64 {
-        self.checked_mean().unwrap()
-    }
-}
-
-impl CheckedMean<f64> for Hypergeometric {
-    /// Returns the mean of the hypergeometric distribution
-    ///
-    /// # Errors
-    ///
-    /// If `N` is `0`
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// K * n / N
-    /// ```
-    ///
-    /// where `N` is population, `K` is successes, and `n` is draws
-    fn checked_mean(&self) -> Result<f64> {
+    fn mean(&self) -> Option<f64> {
         if self.population == 0 {
-            Err(StatsError::ArgGt("population", 0.0))
+            None
         } else {
-            Ok(self.successes as f64 * self.draws as f64 / self.population as f64)
+            Some(self.successes as f64 * self.draws as f64 / self.population as f64)
         }
     }
 }
@@ -293,7 +274,7 @@ impl Skewness<f64> for Hypergeometric {
                 * (population - 2.0 * draws)
                 * (population - 2.0 * successes)
                 / ((draws * successes * (population - successes) * (population - draws)).sqrt()
-                   * (population - 2.0));
+                    * (population - 2.0));
             Some(val)
         }
     }
