@@ -154,8 +154,8 @@ where
     /// # Remarks
     ///
     /// This is the same mean used to construct the distribution
-    fn mean(&self) -> VectorN<f64, N> {
-        self.mu.clone()
+    fn mean(&self) -> VectorN<Option<f64>, N> {
+        self.mu.map(|x| Some(x)).cloned()
     }
 }
 

@@ -111,8 +111,8 @@ impl Min<f64> for Cauchy {
     /// ```ignore
     /// NEG_INF
     /// ```
-    fn min(&self) -> f64 {
-        f64::NEG_INFINITY
+    fn min(&self) -> Option<f64> {
+        None
     }
 }
 
@@ -125,8 +125,8 @@ impl Max<f64> for Cauchy {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> f64 {
-        f64::INFINITY
+    fn max(&self) -> Option<f64> {
+        None
     }
 }
 
@@ -140,8 +140,8 @@ impl Entropy<f64> for Cauchy {
     /// ```
     ///
     /// where `γ` is the scale
-    fn entropy(&self) -> f64 {
-        (4.0 * f64::consts::PI * self.scale).ln()
+    fn entropy(&self) -> Option<f64> {
+        Some((4.0 * f64::consts::PI * self.scale).ln())
     }
 }
 
@@ -155,8 +155,8 @@ impl Median<f64> for Cauchy {
     /// ```
     ///
     /// where `x_0` is the location
-    fn median(&self) -> f64 {
-        self.location
+    fn median(&self) -> Option<f64> {
+        Some(self.location)
     }
 }
 
@@ -170,8 +170,8 @@ impl Mode<f64> for Cauchy {
     /// ```
     ///
     /// where `x_0` is the location
-    fn mode(&self) -> f64 {
-        self.location
+    fn mode(&self) -> Option<f64> {
+        Some(self.location)
     }
 }
 

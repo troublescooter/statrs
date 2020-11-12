@@ -78,7 +78,7 @@ impl Min<f64> for Dirac {
     /// ```ignore
     /// v
     /// ```
-    fn min(&self) -> f64 {
+    fn min(&self) -> Option<f64> {
         self.0
     }
 }
@@ -92,7 +92,7 @@ impl Max<f64> for Dirac {
     /// ```ignore
     /// v
     /// ```
-    fn max(&self) -> f64 {
+    fn max(&self) -> Option<f64> {
         self.0
     }
 }
@@ -104,8 +104,8 @@ impl Mean<f64> for Dirac {
     ///
     /// Since the only value that can be produced by this distribution is `v` with probability
     /// 1, it is just `v`.
-    fn mean(&self) -> f64 {
-        self.0
+    fn mean(&self) -> Option<f64> {
+        Some(self.0)
     }
 }
 
@@ -119,18 +119,8 @@ impl Variance<f64> for Dirac {
     /// ```
     ///
     /// Since only one value can be produced there is no variance.
-    fn variance(&self) -> f64 {
-        0.0
-    }
-
-    /// Returns the standard deviation of the dirac distribution
-    ///
-    /// # Remarks
-    ///
-    /// Since there is no variance in draws from this distribution the standard deviation is
-    /// also 0.
-    fn std_dev(&self) -> f64 {
-        0.0
+    fn variance(&self) -> Option<f64> {
+        Some(0.0)
     }
 }
 
@@ -144,8 +134,8 @@ impl Entropy<f64> for Dirac {
     /// ```
     ///
     /// Since this distribution has full certainty, it encodes no information
-    fn entropy(&self) -> f64 {
-        0.0
+    fn entropy(&self) -> Option<f64> {
+        Some(0.0)
     }
 }
 
@@ -157,8 +147,8 @@ impl Skewness<f64> for Dirac {
     /// ```ignore
     /// 0
     /// ```
-    fn skewness(&self) -> f64 {
-        0.0
+    fn skewness(&self) -> Option<f64> {
+        Some(0.0)
     }
 }
 
@@ -172,8 +162,8 @@ impl Median<f64> for Dirac {
     /// ```
     ///
     /// where `v` is the point of the dirac distribution
-    fn median(&self) -> f64 {
-        self.0
+    fn median(&self) -> Option<f64> {
+        Some(self.0)
     }
 }
 
@@ -187,8 +177,8 @@ impl Mode<f64> for Dirac {
     /// ```
     ///
     /// where `v` is the point of the dirac distribution
-    fn mode(&self) -> f64 {
-        self.0
+    fn mode(&self) -> Option<f64> {
+        Some(self.0)
     }
 }
 

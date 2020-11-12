@@ -166,19 +166,6 @@ impl Variance<f64> for Erlang {
     fn variance(&self) -> f64 {
         self.g.variance()
     }
-
-    /// Returns the standard deviation of the erlang distribution
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt(k) / λ
-    /// ```
-    ///
-    /// where `k` is the shape and `λ` is the rate
-    fn std_dev(&self) -> f64 {
-        self.g.std_dev()
-    }
 }
 
 impl Entropy<f64> for Erlang {

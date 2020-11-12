@@ -91,9 +91,9 @@ impl FisherSnedecor {
 }
 
 impl Distribution<f64> for FisherSnedecor {
-    fn sample<R: Rng + ?Sized>(&self, r: &mut R) -> f64 {
-        (super::gamma::sample_unchecked(r, self.freedom_1 / 2.0, 0.5) * self.freedom_2)
-            / (super::gamma::sample_unchecked(r, self.freedom_2 / 2.0, 0.5) * self.freedom_1)
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        (super::gamma::sample_unchecked(rng, self.freedom_1 / 2.0, 0.5) * self.freedom_2)
+            / (super::gamma::sample_unchecked(rng, self.freedom_2 / 2.0, 0.5) * self.freedom_1)
     }
 }
 
@@ -136,8 +136,8 @@ impl Min<f64> for FisherSnedecor {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> f64 {
-        0.0
+    fn min(&self) -> Option<f64> {
+        Some(0.0)
     }
 }
 
@@ -151,8 +151,8 @@ impl Max<f64> for FisherSnedecor {
     /// ```ignore
     /// INF
     /// ```
-    fn max(&self) -> f64 {
-        f64::INFINITY
+    fn max(&self) -> Option<f64> {
+        None
     }
 }
 
@@ -174,34 +174,11 @@ impl Mean<f64> for FisherSnedecor {
     /// ```
     ///
     /// where `d2` is the second degree of freedom
-    fn mean(&self) -> f64 {
-        self.checked_mean().unwrap()
-    }
-}
-
-impl CheckedMean<f64> for FisherSnedecor {
-    /// Returns the mean of the fisher-snedecor distribution
-    ///
-    /// # Errors
-    ///
-    /// If `freedom_2 <= 2.0`
-    ///
-    /// # Remarks
-    ///
-    /// Returns `NaN` if `freedom_2` is `INF`
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// d2 / (d2 - 2)
-    /// ```
-    ///
-    /// where `d2` is the second degree of freedom
-    fn checked_mean(&self) -> Result<f64> {
+    fn mean(&self) -> Option<f64> {
         if self.freedom_2 <= 2.0 {
-            Err(StatsError::ArgGt("freedom_2", 2.0))
+            None
         } else {
-            Ok(self.freedom_2 / (self.freedom_2 - 2.0))
+            Some(self.freedom_2 / (self.freedom_2 - 2.0))
         }
     }
 }
@@ -225,55 +202,9 @@ impl Variance<f64> for FisherSnedecor {
     ///
     /// where `d1` is the first degree of freedom and `d2` is
     /// the second degree of freedom
-    fn variance(&self) -> f64 {
-        self.checked_variance().unwrap()
-    }
-
-    /// Returns the standard deviation of the fisher-snedecor distribution
-    ///
-    /// # Panics
-    ///
-    /// If `freedom_2 <= 4.0`
-    ///
-    /// # Remarks
-    ///
-    /// Returns `NaN` if `freedom_1` or `freedom_2` is `INF`
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt((2 * d2^2 * (d1 + d2 - 2)) / (d1 * (d2 - 2)^2 * (d2 - 4)))
-    /// ```
-    ///
-    /// where `d1` is the first degree of freedom and `d2` is
-    /// the second degree of freedom
-    fn std_dev(&self) -> f64 {
-        self.checked_std_dev().unwrap()
-    }
-}
-
-impl CheckedVariance<f64> for FisherSnedecor {
-    /// Returns the variance of the fisher-snedecor distribution
-    ///
-    /// # Errors
-    ///
-    /// If `freedom_2 <= 4.0`
-    ///
-    /// # Remarks
-    ///
-    /// Returns `NaN` if `freedom_1` or `freedom_2` is `INF`
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// (2 * d2^2 * (d1 + d2 - 2)) / (d1 * (d2 - 2)^2 * (d2 - 4))
-    /// ```
-    ///
-    /// where `d1` is the first degree of freedom and `d2` is
-    /// the second degree of freedom
-    fn checked_variance(&self) -> Result<f64> {
+    fn variance(&self) -> Option<f64> {
         if self.freedom_2 <= 4.0 {
-            Err(StatsError::ArgGt("freedom_2", 4.0))
+            None
         } else {
             let val =
                 (2.0 * self.freedom_2 * self.freedom_2 * (self.freedom_1 + self.freedom_2 - 2.0))
@@ -281,30 +212,8 @@ impl CheckedVariance<f64> for FisherSnedecor {
                         * (self.freedom_2 - 2.0)
                         * (self.freedom_2 - 2.0)
                         * (self.freedom_2 - 4.0));
-            Ok(val)
+            Some(val)
         }
-    }
-
-    /// Returns the standard deviation of the fisher-snedecor distribution
-    ///
-    /// # Errors
-    ///
-    /// If `freedom_2 <= 4.0`
-    ///
-    /// # Remarks
-    ///
-    /// Returns `NaN` if `freedom_1` or `freedom_2` is `INF`
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt((2 * d2^2 * (d1 + d2 - 2)) / (d1 * (d2 - 2)^2 * (d2 - 4)))
-    /// ```
-    ///
-    /// where `d1` is the first degree of freedom and `d2` is
-    /// the second degree of freedom
-    fn checked_std_dev(&self) -> Result<f64> {
-        self.checked_variance().map(|x| x.sqrt())
     }
 }
 
@@ -328,40 +237,15 @@ impl Skewness<f64> for FisherSnedecor {
     ///
     /// where `d1` is the first degree of freedom and `d2` is
     /// the second degree of freedom
-    fn skewness(&self) -> f64 {
-        self.checked_skewness().unwrap()
-    }
-}
-
-impl CheckedSkewness<f64> for FisherSnedecor {
-    /// Returns the skewness of the fisher-snedecor distribution
-    ///
-    /// # Errors
-    ///
-    /// If `freedom_2 <= 6.0`
-    ///
-    /// # Remarks
-    ///
-    /// Returns `NaN` if `freedom_1` or `freedom_2` is `INF`
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// ((2d1 + d2 - 2) * sqrt(8 * (d2 - 4))) / ((d2 - 6) * sqrt(d1 * (d1 + d2
-    /// - 2)))
-    /// ```
-    ///
-    /// where `d1` is the first degree of freedom and `d2` is
-    /// the second degree of freedom
-    fn checked_skewness(&self) -> Result<f64> {
+    fn skewness(&self) -> Option<f64> {
         if self.freedom_2 <= 6.0 {
-            Err(StatsError::ArgGt("freedom_2", 6.0))
+            None
         } else {
             let val = ((2.0 * self.freedom_1 + self.freedom_2 - 2.0)
                 * (8.0 * (self.freedom_2 - 4.0)).sqrt())
                 / ((self.freedom_2 - 6.0)
                     * (self.freedom_1 * (self.freedom_1 + self.freedom_2 - 2.0)).sqrt());
-            Ok(val)
+            Some(val)
         }
     }
 }
@@ -385,37 +269,13 @@ impl Mode<f64> for FisherSnedecor {
     ///
     /// where `d1` is the first degree of freedom and `d2` is
     /// the second degree of freedom
-    fn mode(&self) -> f64 {
-        self.checked_mode().unwrap()
-    }
-}
-
-impl CheckedMode<f64> for FisherSnedecor {
-    /// Returns the mode for the fisher-snedecor distribution
-    ///
-    /// # Errors
-    ///
-    /// If `freedom_1 <= 2.0`
-    ///
-    /// # Remarks
-    ///
-    /// Returns `NaN` if `freedom_1` or `freedom_2` is `INF`
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// ((d1 - 2) / d1) * (d2 / (d2 + 2))
-    /// ```
-    ///
-    /// where `d1` is the first degree of freedom and `d2` is
-    /// the second degree of freedom
-    fn checked_mode(&self) -> Result<f64> {
+    fn mode(&self) -> Option<f64> {
         if self.freedom_1 <= 2.0 {
-            Err(StatsError::ArgGt("freedom_1", 2.0))
+            None
         } else {
             let val = (self.freedom_2 * (self.freedom_1 - 2.0))
                 / (self.freedom_1 * (self.freedom_2 + 2.0));
-            Ok(val)
+            Some(val)
         }
     }
 }

@@ -150,19 +150,6 @@ impl Variance<f64> for Exponential {
     fn variance(&self) -> f64 {
         1.0 / (self.rate * self.rate)
     }
-
-    /// Returns the standard deviation of the exponential distribution
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt(1 / λ^2)
-    /// ```
-    ///
-    /// where `λ` is the rate
-    fn std_dev(&self) -> f64 {
-        1.0 / self.rate
-    }
 }
 
 impl Entropy<f64> for Exponential {

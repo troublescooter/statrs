@@ -113,8 +113,8 @@ impl Mean<Vec<f64>> for Multinomial {
     ///
     /// where `n` is the number of trials, `p_i` is the `i`th probability,
     /// and `k` is the total number of probabilities
-    fn mean(&self) -> Vec<f64> {
-        self.p.iter().map(|x| x * self.n as f64).collect()
+    fn mean(&self) -> Option<Vec<f64>> {
+        Some(self.p.iter().map(|x| x * self.n as f64).collect())
     }
 }
 
@@ -124,30 +124,16 @@ impl Variance<Vec<f64>> for Multinomial {
     /// # Formula
     ///
     /// ```ignore
-    /// n * p_i * (1 - p_1) for i in 1...k
+    /// n * p_i * (1 - p_i) for i in 1...k
     /// ```
     ///
     /// where `n` is the number of trials, `p_i` is the `i`th probability,
     /// and `k` is the total number of probabilities
-    fn variance(&self) -> Vec<f64> {
-        self.p
+    fn variance(&self) -> Option<Vec<f64>> {
+        Some(self.p
             .iter()
             .map(|x| x * self.n as f64 * (1.0 - x))
-            .collect()
-    }
-
-    /// Returns the standard deviation of the multinomial distribution
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt(n * p_i * (1 - p_1)) for i in 1...k
-    /// ```
-    ///
-    /// where `n` is the number of trials, `p_i` is the `i`th probability,
-    /// and `k` is the total number of probabilities
-    fn std_dev(&self) -> Vec<f64> {
-        self.variance().iter().map(|x| x.sqrt()).collect()
+            .collect())
     }
 }
 
@@ -162,11 +148,11 @@ impl Skewness<Vec<f64>> for Multinomial {
     ///
     /// where `n` is the number of trials, `p_i` is the `i`th probability,
     /// and `k` is the total number of probabilities
-    fn skewness(&self) -> Vec<f64> {
-        self.p
+    fn skewness(&self) -> Option<Vec<f64>> {
+        Some(self.p
             .iter()
             .map(|x| (1.0 - 2.0 * x) / (self.n as f64 * (1.0 - x) * x).sqrt())
-            .collect()
+            .collect())
     }
 }
 

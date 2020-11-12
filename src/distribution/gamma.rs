@@ -181,19 +181,6 @@ impl Variance<f64> for Gamma {
     fn variance(&self) -> f64 {
         self.shape / (self.rate * self.rate)
     }
-
-    /// Returns the standard deviation of the gamma distribution
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt(α) / β
-    /// ```
-    ///
-    /// where `α` is the shape and `β` is the rate
-    fn std_dev(&self) -> f64 {
-        self.shape.sqrt() / self.rate
-    }
 }
 
 impl Entropy<f64> for Gamma {

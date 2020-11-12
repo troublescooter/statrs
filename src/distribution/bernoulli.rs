@@ -113,8 +113,8 @@ impl Min<u64> for Bernoulli {
     /// ```ignore
     /// 0
     /// ```
-    fn min(&self) -> u64 {
-        0
+    fn min(&self) -> Option<u64> {
+        Some(0)
     }
 }
 
@@ -128,8 +128,8 @@ impl Max<u64> for Bernoulli {
     /// ```ignore
     /// 1
     /// ```
-    fn max(&self) -> u64 {
-        1
+    fn max(&self) -> Option<u64> {
+        Some(1)
     }
 }
 
@@ -142,7 +142,7 @@ impl Mean<f64> for Bernoulli {
     /// ```ignore
     /// p
     /// ```
-    fn mean(&self) -> f64 {
+    fn mean(&self) -> Option<f64> {
         self.b.mean()
     }
 }
@@ -156,20 +156,8 @@ impl Variance<f64> for Bernoulli {
     /// ```ignore
     /// p * (1 - p)
     /// ```
-    fn variance(&self) -> f64 {
+    fn variance(&self) -> Option<f64> {
         self.b.variance()
-    }
-
-    /// Returns the standard deviation of the bernoulli
-    /// distribution
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt(p * (1 - p))
-    /// ```
-    fn std_dev(&self) -> f64 {
-        self.b.std_dev()
     }
 }
 
@@ -183,7 +171,7 @@ impl Entropy<f64> for Bernoulli {
     /// q = (1 - p)
     /// -q * ln(q) - p * ln(p)
     /// ```
-    fn entropy(&self) -> f64 {
+    fn entropy(&self) -> Option<f64> {
         self.b.entropy()
     }
 }
@@ -198,7 +186,7 @@ impl Skewness<f64> for Bernoulli {
     /// q = (1 - p)
     /// (1 - 2p) / sqrt(p * q)
     /// ```
-    fn skewness(&self) -> f64 {
+    fn skewness(&self) -> Option<f64> {
         self.b.skewness()
     }
 }
@@ -228,7 +216,7 @@ impl Mode<u64> for Bernoulli {
     /// if p < 0.5 { 0 }
     /// else { 1 }
     /// ```
-    fn mode(&self) -> u64 {
+    fn mode(&self) -> Option<u64> {
         self.b.mode()
     }
 }

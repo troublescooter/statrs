@@ -129,7 +129,7 @@ impl Mean<Vec<f64>> for Dirichlet {
     ///
     /// for the `i`th element where `α_i` is the `i`th concentration parameter
     /// and `α_0` is the sum of all concentration parameters
-    fn mean(&self) -> Vec<f64> {
+    fn mean(&self) -> Option<Vec<f64>> {
         let sum = self.alpha_sum();
         self.alpha.iter().map(|x| x / sum).collect()
     }
@@ -146,26 +146,14 @@ impl Variance<Vec<f64>> for Dirichlet {
     ///
     /// for the `i`th element where `α_i` is the `i`th concentration parameter
     /// and `α_0` is the sum of all concentration parameters
-    fn variance(&self) -> Vec<f64> {
+    fn variance(&self) -> Option<Vec<f64>> {
         let sum = self.alpha_sum();
-        self.alpha
-            .iter()
-            .map(|x| x * (sum - x) / (sum * sum * (sum + 1.0)))
-            .collect()
-    }
-
-    /// Returns the standard deviation of the dirichlet distribution
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt((α_i * (α_0 - α_i)) / (α_0^2 * (α_0 + 1)))
-    /// ```
-    ///
-    /// for the `i`th element where `α_i` is the `i`th concentration parameter
-    /// and `α_0` is the sum of all concentration parameters
-    fn std_dev(&self) -> Vec<f64> {
-        self.variance().iter().map(|x| x.sqrt()).collect()
+        Some(
+            self.alpha
+                .iter()
+                .map(|x| x * (sum - x) / (sum * sum * (sum + 1.0)))
+                .collect(),
+        )
     }
 }
 

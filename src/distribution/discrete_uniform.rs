@@ -135,17 +135,6 @@ impl Variance<f64> for DiscreteUniform {
         let diff = (self.max - self.min) as f64;
         ((diff + 1.0) * (diff + 1.0) - 1.0) / 12.0
     }
-
-    /// Returns the standard deviation of the discrete uniform distribution
-    ///
-    /// # Formula
-    ///
-    /// ```ignore
-    /// sqrt(((max - min + 1)^2 - 1) / 12)
-    /// ```
-    fn std_dev(&self) -> f64 {
-        self.variance().sqrt()
-    }
 }
 
 impl Entropy<f64> for DiscreteUniform {
